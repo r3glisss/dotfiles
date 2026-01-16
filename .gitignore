@@ -1,0 +1,20 @@
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor files
+*.swp
+*.swo
+*~
+.netrwhist
+
+# Neovim generated
+editors/nvim/lazy/
+editors/nvim/lazy-lock.json.bak
+
+# Backup files
+*.bak
+*.backup
+
+# Local overrides (if any)
+*.local

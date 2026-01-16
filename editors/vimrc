@@ -1,0 +1,334 @@
+" =============================================================================
+" VIM CONFIGURATION WITH AUTO-INSTALLATION
+" =============================================================================
+
+" -----------------------------------------------------------------------------
+" Auto-install vim-plug and plugins
+" -----------------------------------------------------------------------------
+if empty(glob('~/.vim/autoload/plug.vim'))
+  silent !curl -fLo ~/.vim/autoload/plug.vim --create-dirs
+    \ https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
+endif
+" Désactivé - pour gérer les plugins manuellement avec :PlugInstall ou :PlugUpdate
+" autocmd VimEnter * if len(filter(values(g:plugs), '!isdirectory(v:val.dir)'))
+"   \| PlugInstall --sync | source $MYVIMRC
+" \| endif
+
+" -----------------------------------------------------------------------------
+" Plugin Management
+" -----------------------------------------------------------------------------
+call plug#begin('~/.vim/plugged')
+
+" File management and navigation
+Plug 'preservim/nerdtree'
+Plug 'Xuyuanp/nerdtree-git-plugin'
+Plug 'ryanoasis/vim-devicons'
+Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
+Plug 'junegunn/fzf.vim'
+
+" Editing enhancements
+Plug 'wellle/context.vim'
+Plug 'jiangmiao/auto-pairs'
+Plug 'mg979/vim-visual-multi', {'branch': 'master'}
+Plug 'tpope/vim-surround'
+Plug 'tpope/vim-commentary'
+Plug 'tpope/vim-repeat'
+Plug 'easymotion/vim-easymotion'
+
+" --- NOUVEAU : Autocomplétion et LSP (le coeur de l'amélioration) ---
+Plug 'prabirshrestha/vim-lsp'
+Plug 'mattn/vim-lsp-settings'
+Plug 'thomasfaingnaert/vim-lsp-compl'
+Plug 'liuchengxu/vista.vim' " Remplace Tagbar avantageusement
+
+" --- SUPPRIMÉ : Ancienne autocomplétion ---
+" Plug 'vim-scripts/AutoComplPop'
+" Plug 'lukas-reineke/cmp-rg'
+
+" Status line and UI
+Plug 'vim-airline/vim-airline'
+Plug 'vim-airline/vim-airline-themes'
+Plug 'vim-airline/vim-airline-lsp' " AJOUT : Intégration LSP pour Airline
+
+" Color schemes
+Plug 'rafi/awesome-vim-colorschemes'
+Plug 'dracula/vim', { 'as': 'dracula' }
+Plug 'tomasiser/vim-code-dark'
+Plug 'haishanh/night-owl.vim'
+Plug 'joshdick/onedark.vim'
+Plug 'cocopon/iceberg.vim'
+Plug 'morhetz/gruvbox'
+Plug 'lunacookies/vim-colors-xcode'
+
+" Syntax highlighting
+Plug 'sheerun/vim-polyglot'
+
+" --- SUPPRIMÉ : Ancienne méthode de formatage ---
+" Plug 'sbdchd/neoformat'
+
+" Git integration
+Plug 'tpope/vim-fugitive'
+Plug 'junegunn/gv.vim'
+Plug 'airblade/vim-gitgutter'
+
+" Productivity
+Plug 'mbbill/undotree'
+" --- SUPPRIMÉ : Remplacé par vista.vim avec LSP ---
+" Plug 'preservim/tagbar'
+
+" Better vizualize code
+Plug 'Yggdroot/indentLine'
+
+call plug#end()
+
+" -----------------------------------------------------------------------------
+" General Settings
+" -----------------------------------------------------------------------------
+
+" Fix for luaParenError highlight group issue
+highlight link luaParenError Error
+
+" Enable modern features
+if (has("termguicolors"))
+  set termguicolors
+endif
+
+" Leader key
+let mapleader = " "
+let maplocalleader = ","
+
+" Color scheme
+try
+  colorscheme xcodedarkhc
+catch
+  colorscheme default
+endtry
+
+" Basic settings
+syntax on
+filetype plugin indent on
+set encoding=UTF-8
+" set bomb " SUPPRIMÉ : potentiellement problématique
+" set binary " SUPPRIMÉ : à utiliser uniquement au besoin
+set ttyfast
+
+" Visual settings
+set number
+set relativenumber
+set cursorline
+set showcmd
+set showmatch
+set ruler
+set laststatus=2
+set scrolloff=8
+set sidescrolloff=8
+set wrap
+set linebreak
+set showbreak=↪\
+set list
+set listchars=tab:→\ ,eol:↲,nbsp:␣,trail:•,extends:⟩,precedes:⟨
+set signcolumn=yes " AJOUT : évite le décalage du texte
+
+" Search settings
+set hlsearch
+set incsearch
+set ignorecase
+set smartcase
+set gdefault
+
+" Indentation
+set autoindent
+set smartindent
+set tabstop=2
+set softtabstop=2
+set shiftwidth=2
+set expandtab
+
+" File handling
+set autoread
+set autowrite
+set backup
+set backupdir=~/.vim/backup//
+set directory=~/.vim/swap//
+set undofile
+set undodir=~/.vim/undo//
+
+if !isdirectory($HOME."/.vim/backup") | call mkdir($HOME."/.vim/backup", "p", 0700) | endif
+if !isdirectory($HOME."/.vim/swap") | call mkdir($HOME."/.vim/swap", "p", 0700) | endif
+if !isdirectory($HOME."/.vim/undo") | call mkdir($HOME."/.vim/undo", "p", 0700) | endif
+
+" Performance
+set hidden
+set history=1000
+set updatetime=300
+set timeoutlen=500
+set ttimeoutlen=0
+
+" Mouse and clipboard
+set mouse=a
+" if has('clipboard')
+"   set clipboard=unnamedplus
+" endif
+
+" Completion
+set completeopt=menuone,noinsert,noselect
+set wildmenu
+set wildmode=list:longest,full
+set wildignore=*.o,*.obj,*~,*.exe,*.a,*.pdb,*.lib,*.so,*.dll,*.swp,*.egg,*.jar,*.class,*.pyc,*.pyo,*.bin,*.dex,*.zip,*.7z,*.rar,*.gz,*.tar,*.gzip,*.bz2,*.tgz,*.xz,*DS_Store*,*.ipch,*.gem,*.png,*.jpg,*.gif,*.bmp,*.ico,*.pdf,*.dmg
+set wildignore+=node_modules/*,bower_components/*
+
+" Tags
+set tags=./tags;
+" Allow jumping to defines (includes backtick in word characters)
+set iskeyword+=`
+
+" -----------------------------------------------------------------------------
+" Key Mappings (INCHANGÉS)
+" -----------------------------------------------------------------------------
+inoremap jk <ESC>
+inoremap kj <ESC>
+nnoremap <silent> <Esc><Esc> :nohlsearch<CR>
+nnoremap <C-h> <C-w>h
+nnoremap <C-j> <C-w>j
+nnoremap <C-k> <C-w>k
+nnoremap <C-l> <C-w>l
+nnoremap <silent> <C-Up> :resize +2<CR>
+nnoremap <silent> <C-Down> :resize -2<CR>
+nnoremap <silent> <C-Left> :vertical resize -2<CR>
+nnoremap <silent> <C-Right> :vertical resize +2<CR>
+nnoremap <leader>tn :tabnew<CR>
+nnoremap <leader>tc :tabclose<CR>
+nnoremap <leader>to :tabonly<CR>
+nnoremap <leader>th :tabprevious<CR>
+nnoremap <leader>tl :tabnext<CR>
+nnoremap <leader>tm :tabmove<CR>
+nnoremap <leader>bn :bnext<CR>
+nnoremap <leader>bp :bprevious<CR>
+nnoremap <leader>bd :bdelete<CR>
+nnoremap <leader>bl :buffers<CR>
+nnoremap <leader>w :w<CR>
+nnoremap <leader>q :q<CR>
+nnoremap <leader>x :x<CR>
+vnoremap < <gv
+vnoremap > >gv
+nnoremap <A-j> :m .+1<CR>==
+nnoremap <A-k> :m .-2<CR>==
+inoremap <A-j> <Esc>:m .+1<CR>==gi
+inoremap <A-k> <Esc>:m .-2<CR>==gi
+vnoremap <A-j> :m '>+1<CR>gv=gv
+vnoremap <A-k> :m '<-2<CR>gv=gv
+
+" Clipboard integration (explicit)
+vnoremap <leader>y "+y
+nnoremap <leader>y "+y
+nnoremap <leader>p "+p
+vnoremap <leader>p "+p
+nnoremap <leader>P "+P
+
+" -----------------------------------------------------------------------------
+" Plugin Configurations
+" -----------------------------------------------------------------------------
+
+" Airline
+let g:airline_powerline_fonts = 1 " ESSENTIEL: Dit à Airline d'utiliser les symboles de votre Nerd Font
+let g:airline_theme = 'onedark' " Essayez 'onedark', 'gruvbox', 'dracula', ou 'solarized'
+let g:airline#extensions#tabline#enabled = 1
+let g:airline#extensions#tabline#buffer_nr_show = 1
+
+" AJOUT : Affichez la branche Git actuelle, c'est super pratique !
+let g:airline#extensions#branch#enabled = 1
+" DISABLED - causing E117 error: let g:airline#extensions#branch#format = ' %s' "  est une icône de branche Git
+let g:airline_section_z = ' %l:%c │ %p%% ' " Simplifions la section droite pour un look plus clean
+
+" NERDTree
+let g:NERDTreeShowHidden = 1
+let g:NERDTreeMinimalUI = 1
+let g:NERDTreeIgnore = ['^\.DS_Store$', '^tags$', '\.git$[[dir]]', '\.idea$[[dir]]', '\.sass-cache$']
+let g:NERDTreeStatusline = ''
+autocmd BufEnter * if winnr('$') == 1 && exists('b:NERDTree') && b:NERDTree.isTabTree() | quit | endif
+nnoremap <leader>e :NERDTreeToggle<CR>
+nnoremap <leader>E :NERDTreeFind<CR>
+
+" FZF
+let g:fzf_action = { 'ctrl-t': 'tab split', 'ctrl-x': 'split', 'ctrl-v': 'vsplit' }
+let g:fzf_layout = { 'down': '40%' }
+let g:fzf_history_dir = '~/.local/share/fzf-history'
+nnoremap <leader>ff :Files<CR>
+nnoremap <leader>fg :GitFiles<CR>
+nnoremap <leader>fb :Buffers<CR>
+nnoremap <leader>fl :Lines<CR>
+nnoremap <leader>ft :Tags<CR>
+nnoremap <leader>fh :History<CR>
+nnoremap <leader>fs :Rg<CR>
+nnoremap <leader>fc :Commands<CR>
+
+" --- SUPPRIMÉ : AutoComplPop config ---
+
+" GitGutter
+let g:gitgutter_enabled = 1
+let g:gitgutter_map_keys = 0
+nmap <leader>gn <Plug>(GitGutterNextHunk)
+nmap <leader>gp <Plug>(GitGutterPrevHunk)
+nmap <leader>gs <Plug>(GitGutterStageHunk)
+nmap <leader>gu <Plug>(GitGutterUndoHunk)
+
+" Undotree
+nnoremap <leader>u :UndotreeToggle<CR>
+
+" EasyMotion
+let g:EasyMotion_do_mapping = 0
+let g:EasyMotion_smartcase = 1
+nmap s <Plug>(easymotion-overwin-f2)
+map <leader>j <Plug>(easymotion-j)
+map <leader>k <Plug>(easymotion-k)
+
+" -----------------------------------------------------------------------------
+" LSP (Language Server Protocol) Configuration (NOUVELLE SECTION)
+" -----------------------------------------------------------------------------
+let g:lsp_diagnostics_signs_enabled = 1
+let g:lsp_diagnostics_virtual_text_enabled = 0
+let g:lsp_completion_documentation_enabled = 1
+let g:lsp_semantic_highlighting_enabled = 1
+let g:lsp_signs_error = {'text': ''}
+let g:lsp_signs_warning = {'text': ''}
+let g:lsp_signs_information = {'text': ''}
+let g:lsp_signs_hint = {'text': ''}
+
+" Raccourcis pour la navigation dans le code
+nnoremap <silent> <leader>ld :LspDefinition<CR>
+nnoremap <silent> <leader>li :LspImplementation<CR>
+nnoremap <silent> <leader>lr :LspReferences<CR>
+nnoremap <silent> <leader>lh :LspHover<CR>
+nnoremap <silent> <leader>lR :LspRename<CR>
+nnoremap <silent> <leader>la :LspCodeAction<CR>
+nnoremap <silent> <leader>le :LspNextError<CR>
+nnoremap <silent> <leader>lE :LspPreviousError<CR>
+
+" Remplace Tagbar
+nnoremap <leader>T :Vista!!<CR>
+
+" -----------------------------------------------------------------------------
+" Custom Commands and Functions
+" -----------------------------------------------------------------------------
+command! Hexedit %!xxd
+command! HexeditRevert %!xxd -r
+command! TrailingRemove :%s/\s\+$//e
+command! ReloadConfig source $MYVIMRC
+command! EditConfig edit $MYVIMRC
+
+" --- SUPPRIMÉ : Fonctions de formatage maintenant gérées par LSP ---
+
+" -----------------------------------------------------------------------------
+" Auto Commands
+" -----------------------------------------------------------------------------
+augroup GeneralGroup
+  autocmd!
+  autocmd BufReadPost * if line("'\"") > 1 && line("'\"") <= line("$") | exe "normal! g'\"" | endif
+  autocmd FocusLost * :wa
+  " Le formatage est maintenant géré par le LSP, mais on garde la suppression des espaces
+  autocmd BufWritePre * :%s/\s\+$//e
+  " Désactivé - pour formater manuellement avec :LspDocumentFormat si nécessaire
+  " autocmd BufWritePre * call LspDocumentFormatSync()
+  autocmd BufWritePost .vimrc source %
+augroup END
+
