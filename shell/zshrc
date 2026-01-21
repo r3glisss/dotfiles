@@ -330,9 +330,7 @@ bindkey '^K' fzf_kill
 #                            AI Stack
 # --------------------------------------------------------------------------- #
 alias ccusage='npx ccusage blocks --live'
-alias claude-serena-start='claude mcp add serena -- uvx --from git+https://github.com/oraios/serena serena start-mcp-server --context ide-assistant --project $(pwd)'
-alias claude-context7-start='claude mcp add context7 -- npx -y @upstash/context7-mcp --api-key ctx7sk-308aa737-30af-495b-8cda-602589ea25ed'
-
+alias claude-serena='serena start-mcp-server --no-dashboard --context agent --project $(pwd)'
 
 # --------------------------------------------------------------------------- #
 #                            FINAL SETUP & PROMPT
