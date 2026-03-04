@@ -1,6 +1,3 @@
-# Taps
-tap "homebrew/cask-fonts"
-
 # Terminal tools
 brew "tmux"
 brew "neovim"
@@ -22,7 +19,7 @@ brew "node"
 brew "python"
 
 # Fonts (Nerd Fonts)
-cask "font-sf-mono-nerd-font"
+cask "font-sf-mono-nerd-font-ligaturized"
 cask "font-jetbrains-mono-nerd-font"
 
 # Terminal emulator (optional)
