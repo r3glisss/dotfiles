@@ -106,10 +106,28 @@ end, { desc = "Regenere verible.filelist a la racine du projet" })
 --------------------------------------------------------------------------------
 local group = vim.api.nvim_create_augroup("systemverilog", { clear = true })
 
+-- sigcone : drivers et fanout du signal sous le curseur. Le module vit dans
+-- lua/sigcone/ (en anglais), charge a la premiere ouverture d'un fichier RTL.
+local sigcone_ready = false
+
 vim.api.nvim_create_autocmd("FileType", {
   group = group,
   pattern = { "verilog", "systemverilog" },
   callback = function(ev)
+    if not sigcone_ready then
+      require("sigcone").setup()
+      sigcone_ready = true
+    end
+    local function map(lhs, rhs, desc)
+      vim.keymap.set("n", lhs, rhs, { buffer = ev.buf, silent = true, desc = desc })
+    end
+    map("<leader>i", function()
+      require("sigcone").toggle()
+    end, "Inspect signal (drivers / fanout)")
+    map("<leader>I", function()
+      require("sigcone").quickfix()
+    end, "Inspect signal (quickfix)")
+
     local bo = vim.bo[ev.buf]
     bo.tabstop = 2
     bo.softtabstop = 2

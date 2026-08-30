@@ -22,6 +22,8 @@ return {
       { "<leader>t", group = "onglet" },
       { "<leader>v", group = "vim" },
       { "<leader>x", group = "diagnostics / listes" },
+      { "<leader>i", desc = "inspect signal (RTL)" },
+      { "<leader>I", desc = "inspect signal, quickfix (RTL)" },
       { "]", group = "aller a (suivant)" },
       { "[", group = "aller a (precedent)" },
     },
