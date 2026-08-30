@@ -1,6 +1,12 @@
 return {
   "nvim-telescope/telescope.nvim",
   tag = "0.1.8",
+  -- Tous les mappings <leader>f* sont poses dans `config` ci-dessous : il faut
+  -- donc que le plugin soit charge au demarrage. Sans ce `lazy = false`, la
+  -- moindre autre spec telescope declarant un `keys` (git.lua) suffit a le
+  -- rendre lazy, et plus aucun <leader>f* n'existe tant qu'on n'a pas
+  -- declenche une de ces touches.
+  lazy = false,
   dependencies = {
     "nvim-lua/plenary.nvim",
     "ThePrimeagen/git-worktree.nvim",
@@ -288,7 +294,8 @@ return {
     keymap.set("n", "<leader>ff", function() builtin.find_files() end, { desc = "🔍 Find files" })
     keymap.set("n", "<leader>fa", function() builtin.find_files({ follow = true, no_ignore = true, hidden = true }) end,
       { desc = "🔍 Find all files" })
-    keymap.set("n", "<leader>fb", function() builtin.file_browser() end, { desc = "📁 File browser" })
+    keymap.set("n", "<leader>fe", function() telescope.extensions.file_browser.file_browser() end,
+      { desc = "📁 File browser" })
     keymap.set("n", "<leader>fr", function() telescope.extensions.recent_files.pick() end, { desc = "⏰ Recent files" })
     keymap.set("n", "<leader>fo", function() builtin.oldfiles() end, { desc = "📄 Old files" })
 
@@ -302,11 +309,8 @@ return {
     keymap.set("n", "<leader>fb", function() builtin.buffers() end, { desc = "📋 Buffers" })
     keymap.set("n", "<leader><Tab>", function() builtin.buffers() end, { desc = "📋 Switch buffer" })
 
-    -- Git integration
-    keymap.set("n", "<leader>gs", function() builtin.git_status() end, { desc = "🔧 Git status" })
-    keymap.set("n", "<leader>gc", function() builtin.git_commits() end, { desc = "📝 Git commits" })
-    keymap.set("n", "<leader>gb", function() builtin.git_bcommits() end, { desc = "📝 Buffer commits" })
-    keymap.set("n", "<leader>gB", function() builtin.git_branches() end, { desc = "🌿 Git branches" })
+    -- Git : les pickers sont mappes dans lua/plugins/git.lua (<leader>gf...)
+    -- pour ne pas entrer en collision avec les actions gitsigns/fugitive.
 
     -- LSP integration
     keymap.set("n", "<leader>lr", function() builtin.lsp_references() end, { desc = "🔗 LSP references" })
@@ -321,11 +325,10 @@ return {
     keymap.set("n", "<leader>vc", function() builtin.commands() end, { desc = "⚡ Commands" })
     keymap.set("n", "<leader>vo", function() builtin.vim_options() end, { desc = "⚙️  Vim options" })
 
-    -- Resume last search
-    keymap.set("n", "<leader>r", function() builtin.resume() end, { desc = "🔄 Resume last search" })
+    -- Reprendre le dernier picker (<leader>r est le prefixe de grug-far)
+    keymap.set("n", "<leader>fp", function() builtin.resume() end, { desc = "🔄 Reprendre le dernier picker" })
 
-    -- Diagnostics
-    keymap.set("n", "<leader>xx", function() builtin.diagnostics() end, { desc = "🚨 Diagnostics" })
-    keymap.set("n", "<leader>xd", function() builtin.diagnostics({ bufnr = 0 }) end, { desc = "🚨 Buffer diagnostics" })
+    -- Les diagnostics passent par trouble.nvim (<leader>x*), plus lisible
+    -- qu'un picker : liste persistante, groupee par fichier, navigable.
   end,
 }

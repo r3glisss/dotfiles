@@ -1,101 +1,218 @@
 -----------------------------------------------------------
--- General options
+-- Options
 -----------------------------------------------------------
-local opt = vim.opt -- for conciseness
+local opt = vim.opt
 
--- line numbers
+-- Numeros de ligne
 opt.relativenumber = true
 opt.number = true
 
--- tabs and indentation
+-- Indentation
 opt.tabstop = 2
 opt.shiftwidth = 2
 opt.expandtab = true
 opt.autoindent = true
 
--- line wrapping
+-- Retour a la ligne
 opt.wrap = true
 opt.linebreak = true
+opt.showbreak = "↪ "
 
--- search settings
+-- Recherche
 opt.ignorecase = true
 opt.smartcase = true
+-- :s/foo/bar/ agit sur toute la ligne sans avoir a taper /g
+opt.gdefault = true
 
--- cursor line
+-- Apparence
 opt.cursorline = true
-
--- appearance
 opt.termguicolors = true
 opt.background = "dark"
--- opt.signcolumn = "yes"
+-- Gouttiere toujours visible : sans ca le texte saute d'une colonne des qu'un
+-- hunk git ou un diagnostic apparait.
+opt.signcolumn = "yes"
+-- Toujours 8 lignes de contexte autour du curseur
+opt.scrolloff = 8
+opt.sidescrolloff = 8
+-- Rend visibles les caracteres qui se voient sinon uniquement en diff
+opt.list = true
+opt.listchars = {
+  tab = "→ ",
+  trail = "•",
+  nbsp = "␣",
+  extends = "⟩",
+  precedes = "⟨",
+}
 
--- backspace
+-- Edition
 opt.backspace = "indent,eol,start"
+opt.splitright = true
+opt.splitbelow = true
+-- Le tiret fait partie du mot (utile en verilog/asciidoc)
+opt.iskeyword:append("-")
 
--- clipboard
+-- Presse-papiers systeme
 opt.clipboard:append("unnamedplus")
 
-if vim.fn.has('wsl') == 1 then
-  vim.api.nvim_create_autocmd('TextYankPost', {
-    group = vim.api.nvim_create_augroup('Yank', { clear = true }),
+-- Historique persistant : undo conserve entre deux sessions, sauvegardes et
+-- fichiers d'echange ranges hors de l'arborescence du projet.
+local state = vim.fn.stdpath("state")
+opt.undofile = true
+opt.undodir = state .. "/undo//"
+opt.backup = true
+opt.backupdir = state .. "/backup//"
+opt.directory = state .. "/swap//"
+for _, dir in ipairs({ "undo", "backup", "swap" }) do
+  vim.fn.mkdir(state .. "/" .. dir, "p", tonumber("700", 8))
+end
+
+-- Ecrit le buffer avant un :make, un :next, un changement de buffer...
+opt.autowrite = true
+
+-- Ignore dans les completions de chemin et les listings
+opt.wildignore:append({
+  "*.o", "*.obj", "*.a", "*.so", "*.dylib", "*.exe", "*.pyc", "*.class",
+  "*.zip", "*.tar.gz", "*.png", "*.jpg", "*.gif", "*.pdf",
+  "*/node_modules/*", "*/.git/*", "*/__pycache__/*", "*/.venv/*",
+  ".DS_Store",
+})
+
+if vim.fn.has("wsl") == 1 then
+  vim.api.nvim_create_autocmd("TextYankPost", {
+    group = vim.api.nvim_create_augroup("Yank", { clear = true }),
     callback = function()
-      vim.fn.system('clip.exe', vim.fn.getreg('"'))
+      vim.fn.system("clip.exe", vim.fn.getreg('"'))
     end,
   })
 end
 
-
--- split windows
-opt.splitright = true
-opt.splitbelow = true
-
--- consider dash as part of the word
-opt.iskeyword:append("-")
-
-
 -----------------------------------------------------------
--- Keymapping
+-- Mappings
 -----------------------------------------------------------
--- set leader key to space
 vim.g.mapleader = " "
+vim.g.maplocalleader = ","
 
-local keymap = vim.keymap -- for conciseness
+local keymap = vim.keymap
+local function map(mode, lhs, rhs, desc)
+  keymap.set(mode, lhs, rhs, { desc = desc, silent = true })
+end
 
----------------------
--- General Keymaps
----------------------
+-- Sortie du mode insertion dans les deux sens
+map("i", "jk", "<ESC>", "Mode normal")
+map("i", "kj", "<ESC>", "Mode normal")
 
--- use jk to exit insert mode
-keymap.set("i", "jk", "<ESC>")
+-- Surbrillance de recherche
+map("n", "<leader>nh", ":nohl<CR>", "Eteindre la surbrillance")
+map("n", "<Esc><Esc>", ":nohl<CR>", "Eteindre la surbrillance")
 
--- clear search highlights
-keymap.set("n", "<leader>nh", ":nohl<CR>")
+-- Supprime un caractere sans polluer le registre
+map("n", "x", '"_x')
 
--- delete single character without copying into register
-keymap.set("n", "x", '"_x')
+-- Incrementer / decrementer
+map("n", "<leader>+", "<C-a>", "Incrementer")
+map("n", "<leader>-", "<C-x>", "Decrementer")
 
--- increment/decrement numbers
-keymap.set("n", "<leader>+", "<C-a>") -- increment
-keymap.set("n", "<leader>-", "<C-x>") -- decrement
+-- Navigation entre fenetres, sans passer par <C-w>
+map("n", "<C-h>", "<C-w>h", "Fenetre a gauche")
+map("n", "<C-j>", "<C-w>j", "Fenetre en bas")
+map("n", "<C-k>", "<C-w>k", "Fenetre en haut")
+map("n", "<C-l>", "<C-w>l", "Fenetre a droite")
 
--- window management
-keymap.set("n", "<leader>sv", "<C-w>v")        -- split window vertically
-keymap.set("n", "<leader>sh", "<C-w>s")        -- split window horizontally
-keymap.set("n", "<leader>se", "<C-w>=")        -- make split windows equal width & height
-keymap.set("n", "<leader>sx", ":close<CR>")    -- close current split window
+-- Redimensionnement aux fleches
+map("n", "<C-Up>", ":resize +2<CR>", "Agrandir en hauteur")
+map("n", "<C-Down>", ":resize -2<CR>", "Reduire en hauteur")
+map("n", "<C-Left>", ":vertical resize -2<CR>", "Reduire en largeur")
+map("n", "<C-Right>", ":vertical resize +2<CR>", "Agrandir en largeur")
 
-keymap.set("n", "<leader>to", ":tabnew<CR>")   -- open new tab
-keymap.set("n", "<leader>tx", ":tabclose<CR>") -- close current tab
-keymap.set("n", "<leader>tn", ":tabn<CR>")     --  go to next tab
-keymap.set("n", "<leader>tp", ":tabp<CR>")     --  go to previous tab
+-- Splits
+map("n", "<leader>sv", "<C-w>v", "Split vertical")
+map("n", "<leader>sh", "<C-w>s", "Split horizontal")
+map("n", "<leader>se", "<C-w>=", "Egaliser les splits")
+map("n", "<leader>sx", ":close<CR>", "Fermer le split")
 
--- remap the multicursor for windows terminal
-keymap.set("n", "<leader>v", "<C-v>")
+-- Onglets
+map("n", "<leader>to", ":tabnew<CR>", "Nouvel onglet")
+map("n", "<leader>tx", ":tabclose<CR>", "Fermer l'onglet")
+map("n", "<leader>tn", ":tabn<CR>", "Onglet suivant")
+map("n", "<leader>tp", ":tabp<CR>", "Onglet precedent")
 
----------------------
--- Plugins Keymaps
----------------------
--- vim-maximizer
-keymap.set("n", "<leader>sm", ":MaximizerToggle<CR>") -- toggle split window maximization
+-- Buffers
+map("n", "<leader>bn", ":bnext<CR>", "Buffer suivant")
+map("n", "<leader>bp", ":bprevious<CR>", "Buffer precedent")
+map("n", "<leader>bd", ":bdelete<CR>", "Fermer le buffer")
+map("n", "<leader>bl", ":buffers<CR>", "Lister les buffers")
 
--- copilot
+-- Ecriture
+map("n", "<leader>w", ":write<CR>", "Enregistrer")
+
+-- Garde la selection apres un decalage d'indentation
+map("v", "<", "<gv", "Desindenter")
+map("v", ">", ">gv", "Indenter")
+
+-- Deplacer la ligne ou la selection
+map("n", "<A-j>", ":m .+1<CR>==", "Descendre la ligne")
+map("n", "<A-k>", ":m .-2<CR>==", "Monter la ligne")
+map("i", "<A-j>", "<Esc>:m .+1<CR>==gi", "Descendre la ligne")
+map("i", "<A-k>", "<Esc>:m .-2<CR>==gi", "Monter la ligne")
+map("v", "<A-j>", ":m '>+1<CR>gv=gv", "Descendre la selection")
+map("v", "<A-k>", ":m '<-2<CR>gv=gv", "Monter la selection")
+
+-----------------------------------------------------------
+-- Autocommandes
+-----------------------------------------------------------
+local group = vim.api.nvim_create_augroup("user-settings", { clear = true })
+
+-- Rouvre un fichier a l'endroit ou on l'avait quitte
+vim.api.nvim_create_autocmd("BufReadPost", {
+  group = group,
+  callback = function(ev)
+    if vim.bo[ev.buf].filetype:match("commit") then
+      return
+    end
+    local mark = vim.api.nvim_buf_get_mark(ev.buf, '"')
+    if mark[1] > 0 and mark[1] <= vim.api.nvim_buf_line_count(ev.buf) then
+      pcall(vim.api.nvim_win_set_cursor, 0, mark)
+    end
+  end,
+})
+
+-- Enregistre tout des que le terminal perd le focus
+vim.api.nvim_create_autocmd("FocusLost", {
+  group = group,
+  command = "silent! wall",
+})
+
+-- Supprime les espaces en fin de ligne au save, sans bouger le curseur
+vim.api.nvim_create_autocmd("BufWritePre", {
+  group = group,
+  callback = function()
+    if vim.bo.binary or vim.bo.filetype == "diff" then
+      return
+    end
+    local view = vim.fn.winsaveview()
+    vim.cmd([[keeppatterns %s/\s\+$//e]])
+    vim.fn.winrestview(view)
+  end,
+})
+
+-- Surligne brievement ce qui vient d'etre copie
+vim.api.nvim_create_autocmd("TextYankPost", {
+  group = group,
+  callback = function()
+    vim.hl.on_yank({ timeout = 150 })
+  end,
+})
+
+-----------------------------------------------------------
+-- Commandes
+-----------------------------------------------------------
+vim.api.nvim_create_user_command("Hexedit", "%!xxd", { desc = "Passer le buffer en hexadecimal" })
+vim.api.nvim_create_user_command("HexeditRevert", "%!xxd -r", { desc = "Revenir du mode hexadecimal" })
+vim.api.nvim_create_user_command("TrailingRemove", [[%s/\s\+$//e]], { desc = "Supprimer les espaces de fin" })
+vim.api.nvim_create_user_command("EditConfig", function()
+  vim.cmd.edit(vim.fn.stdpath("config") .. "/init.lua")
+end, { desc = "Ouvrir la configuration" })
+vim.api.nvim_create_user_command("ReloadConfig", function()
+  vim.cmd("source " .. vim.fn.stdpath("config") .. "/init.lua")
+  vim.notify("Configuration rechargee")
+end, { desc = "Recharger la configuration" })
