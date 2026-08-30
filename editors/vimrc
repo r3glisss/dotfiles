@@ -38,7 +38,13 @@ Plug 'easymotion/vim-easymotion'
 " --- NOUVEAU : Autocomplétion et LSP (le coeur de l'amélioration) ---
 Plug 'prabirshrestha/vim-lsp'
 Plug 'mattn/vim-lsp-settings'
-Plug 'thomasfaingnaert/vim-lsp-compl'
+" thomasfaingnaert/vim-lsp-compl n'existe plus (404) -> paire officielle vim-lsp
+Plug 'prabirshrestha/asyncomplete.vim'
+Plug 'prabirshrestha/asyncomplete-lsp.vim'
+" Sources génériques : sans elles asyncomplete n'a AUCUNE source quand le
+" serveur LSP n'annonce pas completionProvider (cas de verible-verilog-ls).
+Plug 'prabirshrestha/asyncomplete-buffer.vim'
+Plug 'prabirshrestha/asyncomplete-file.vim'
 Plug 'liuchengxu/vista.vim' " Remplace Tagbar avantageusement
 
 " --- SUPPRIMÉ : Ancienne autocomplétion ---
@@ -48,7 +54,8 @@ Plug 'liuchengxu/vista.vim' " Remplace Tagbar avantageusement
 " Status line and UI
 Plug 'vim-airline/vim-airline'
 Plug 'vim-airline/vim-airline-themes'
-Plug 'vim-airline/vim-airline-lsp' " AJOUT : Intégration LSP pour Airline
+" vim-airline-lsp n'existe pas : l'extension LSP est déjà dans vim-airline
+" (autoload/airline/extensions/lsp.vim), activée plus bas.
 
 " Color schemes
 Plug 'rafi/awesome-vim-colorschemes'
@@ -59,6 +66,14 @@ Plug 'joshdick/onedark.vim'
 Plug 'cocopon/iceberg.vim'
 Plug 'morhetz/gruvbox'
 Plug 'lunacookies/vim-colors-xcode'
+
+" Thèmes "café" (ambiance chaude / terracotta)
+Plug 'coffee-theme/coffee.vim'
+" duythinht fournit aussi un 'coffee' -> copie sous un nom distinct (conflit)
+Plug 'duythinht/vim-coffee', { 'do': 'cp colors/coffee.vim colors/coffee-duythinht.vim' }
+" Cognac range son fichier a la racine -> le placer dans colors/
+Plug 'ckmorris/Cognac-Vim', { 'do': 'mkdir -p colors && cp cognac.vim colors/cognac.vim' }
+" Thème local "claude" : ~/.vim/colors/claude.vim (+ airline : ~/.vim/autoload/airline/themes/claude.vim)
 
 " Syntax highlighting
 Plug 'sheerun/vim-polyglot'
@@ -97,9 +112,13 @@ endif
 let mapleader = " "
 let maplocalleader = ","
 
-" Color scheme
+" Color scheme (voir la bascule rapide plus bas : <leader>cc / :Theme)
+" Décommenter pour repasser les littéraux (1'b0, PRIV_LVL_M) et les opérateurs
+" (&, |, =) en ocre / gris chaud au lieu du bleu ardoise :
+" let g:claude_blue_literals = 0
 try
-  colorscheme xcodedarkhc
+  set background=light
+  colorscheme claude
 catch
   colorscheme default
 endtry
@@ -231,12 +250,14 @@ nnoremap <leader>P "+P
 
 " Airline
 let g:airline_powerline_fonts = 1 " ESSENTIEL: Dit à Airline d'utiliser les symboles de votre Nerd Font
-let g:airline_theme = 'onedark' " Essayez 'onedark', 'gruvbox', 'dracula', ou 'solarized'
+let g:airline_theme = 'claude' " assorti au colorscheme ; voir aussi <leader>cc
 let g:airline#extensions#tabline#enabled = 1
 let g:airline#extensions#tabline#buffer_nr_show = 1
 
 " AJOUT : Affichez la branche Git actuelle, c'est super pratique !
 let g:airline#extensions#branch#enabled = 1
+" Compteur d'erreurs/warnings LSP dans la statusline
+let g:airline#extensions#lsp#enabled = 1
 " DISABLED - causing E117 error: let g:airline#extensions#branch#format = ' %s' "  est une icône de branche Git
 let g:airline_section_z = ' %l:%c │ %p%% ' " Simplifions la section droite pour un look plus clean
 
@@ -259,7 +280,14 @@ nnoremap <leader>fb :Buffers<CR>
 nnoremap <leader>fl :Lines<CR>
 nnoremap <leader>ft :Tags<CR>
 nnoremap <leader>fh :History<CR>
-nnoremap <leader>fs :Rg<CR>
+" :RG et non :Rg. Rg lance ripgrep UNE fois (ici sans motif, donc sur tout le
+" code) puis laisse fzf filtrer les lignes "chemin:ligne:col:texte" -> le fuzzy
+" matche aussi le chemin, d'où l'impression de chercher un nom de fichier.
+" RG (fzf#vim#grep2) désactive le fuzzy et relance ripgrep à chaque frappe :
+" la saisie est une vraie regex appliquée au contenu seul.
+nnoremap <leader>fs :RG<CR>
+" RipGrep pré-rempli avec le mot sous le curseur (équivalent de * mais via ripgrep)
+nnoremap <leader>fw :RG <C-r><C-w><CR>
 nnoremap <leader>fc :Commands<CR>
 
 " --- SUPPRIMÉ : AutoComplPop config ---
@@ -287,6 +315,11 @@ map <leader>k <Plug>(easymotion-k)
 " -----------------------------------------------------------------------------
 let g:lsp_diagnostics_signs_enabled = 1
 let g:lsp_diagnostics_virtual_text_enabled = 0
+" Message du diagnostic echo en bas dès que le curseur est sur la ligne.
+" Exclusif avec g:lsp_diagnostics_float_cursor : si le float est actif, vim-lsp
+" ignore l'echo. On laisse donc float_cursor à 0 (défaut).
+let g:lsp_diagnostics_echo_cursor = 1
+let g:lsp_diagnostics_echo_delay = 200
 let g:lsp_completion_documentation_enabled = 1
 let g:lsp_semantic_highlighting_enabled = 1
 let g:lsp_signs_error = {'text': ''}
@@ -303,9 +336,139 @@ nnoremap <silent> <leader>lR :LspRename<CR>
 nnoremap <silent> <leader>la :LspCodeAction<CR>
 nnoremap <silent> <leader>le :LspNextError<CR>
 nnoremap <silent> <leader>lE :LspPreviousError<CR>
+" Formatage (il n'y a plus de neoformat : tout passe par le LSP)
+nnoremap <silent> <leader>lf :LspDocumentFormat<CR>
+vnoremap <silent> <leader>lf :LspDocumentRangeFormat<CR>
+" Liste des diagnostics du buffer dans la loclist
+nnoremap <silent> <leader>ll :LspDocumentDiagnostics<CR>
+
+" Autocomplétion : omnifunc LSP sur les buffers gérés par un serveur
+augroup LspCompletion
+  autocmd!
+  autocmd User lsp_buffer_enabled setlocal omnifunc=lsp#complete
+  " Navigation native : sur un buffer géré par un LSP, gd et <C-]> passent par
+  " le serveur au lieu de la recherche naïve de Vim et du fichier tags.
+  autocmd User lsp_buffer_enabled nmap <buffer> gd <plug>(lsp-definition)
+  autocmd User lsp_buffer_enabled nmap <buffer> <C-]> <plug>(lsp-definition)
+  autocmd User lsp_buffer_enabled nmap <buffer> gr <plug>(lsp-references)
+augroup END
+
+" -----------------------------------------------------------------------------
+" Autocomplétion automatique (asyncomplete)
+" -----------------------------------------------------------------------------
+" Popup dès la première lettre tapée, plus besoin de <C-n>.
+let g:asyncomplete_auto_popup = 1
+let g:asyncomplete_min_chars = 1
+" Évite le spam "match 1 of 12" en bas de l'écran
+set shortmess+=c
+
+" <Tab>/<S-Tab> pour parcourir le popup (completeopt contient noselect :
+" rien n'est inséré tant qu'on n'a pas choisi). <CR> n'est PAS remappé, pour
+" ne pas casser auto-pairs.
+inoremap <expr> <Tab>   pumvisible() ? "\<C-n>" : "\<Tab>"
+inoremap <expr> <S-Tab> pumvisible() ? "\<C-p>" : "\<S-Tab>"
+
+" Sources : les mots des buffers ouverts (l'équivalent de <C-n>, mais
+" déclenché tout seul) et les chemins de fichiers. La source LSP s'ajoute
+" d'elle-même via asyncomplete-lsp, uniquement si le serveur sait compléter.
+augroup AsyncompleteSources
+  autocmd!
+  autocmd User asyncomplete_setup call asyncomplete#register_source(
+    \ asyncomplete#sources#buffer#get_source_options({
+    \   'name': 'buffer',
+    \   'allowlist': ['*'],
+    \   'completor': function('asyncomplete#sources#buffer#completor'),
+    \   'config': { 'max_buffer_size': 5000000 },
+    \ }))
+  autocmd User asyncomplete_setup call asyncomplete#register_source(
+    \ asyncomplete#sources#file#get_source_options({
+    \   'name': 'file',
+    \   'allowlist': ['*'],
+    \   'priority': 10,
+    \   'completor': function('asyncomplete#sources#file#completor'),
+    \ }))
+augroup END
 
 " Remplace Tagbar
 nnoremap <leader>T :Vista!!<CR>
+
+" -----------------------------------------------------------------------------
+" SystemVerilog / Verilog
+" -----------------------------------------------------------------------------
+" Syntaxe, ftplugin et indentation viennent du runtime natif de Vim
+" ($VIMRUNTIME/{syntax,ftplugin,indent}/systemverilog.vim) : rien à installer.
+" Serveur LSP : verible-verilog-ls (~/.local/bin), fourni par verible.
+"   -> diagnostics à la volée + :LspDocumentFormat (verible-verilog-format)
+
+augroup VerilogGroup
+  autocmd!
+  " *.sv et *.svh sont détectés nativement. *.v passe par une heuristique de
+  " contenu (autoload/dist/ft.vim) qui peut basculer sur le langage V ou Coq :
+  " en RTL on force le verilog.
+  autocmd BufRead,BufNewFile *.v,*.vh set filetype=verilog
+augroup END
+
+" Réglages verible : voir `verible-verilog-format --helpfull`.
+" Les règles de lint se configurent par projet dans un fichier .rules.verible_lint
+let g:lsp_settings = get(g:, 'lsp_settings', {})
+let g:lsp_settings['verible-verilog-ls'] = {
+  \ 'args': ['--rules_config_search'],
+  \ 'root_uri_patterns': ['.git/', 'verible.filelist'],
+  \ }
+
+" --- Indexation projet : indispensable au goto definition inter-fichiers ---
+" verible ne résout les symboles hors du fichier courant que s'il trouve un
+" 'verible.filelist' à la racine du projet. Aucun glob n'y est accepté : il
+" faut lister chaque fichier. On le régénère donc tout seul, et le serveur le
+" relit à chaud (aucun redémarrage nécessaire).
+function! s:VeribleRoot(file) abort
+  let l:dir = fnamemodify(a:file, ':p:h')
+  let l:git = finddir('.git', l:dir . ';')
+  if !empty(l:git)
+    return fnamemodify(l:git, ':p:h:h')
+  endif
+  let l:fl = findfile('verible.filelist', l:dir . ';')
+  return !empty(l:fl) ? fnamemodify(l:fl, ':p:h') : l:dir
+endfunction
+
+function! s:VeribleSync(file) abort
+  if empty(a:file) || !filereadable(a:file)
+    return 0
+  endif
+  let l:root = s:VeribleRoot(a:file)
+  let l:path = l:root . '/verible.filelist'
+  " Dans un dépôt git, 'ls-files -co --exclude-standard' voit les fichiers non
+  " encore commités et écarte tout seul les artefacts de build gitignorés.
+  if isdirectory(l:root . '/.git')
+    let l:cmd = printf('git -C %s ls-files -co --exclude-standard'
+      \ . ' -- "*.sv" "*.svh" "*.v" "*.vh"', shellescape(l:root))
+  else
+    let l:cmd = printf('cd %s && find . \( -name "*.sv" -o -name "*.svh"'
+      \ . ' -o -name "*.v" -o -name "*.vh" \) | sed "s|^\./||"', shellescape(l:root))
+  endif
+  let l:new = sort(filter(split(system(l:cmd), "\n"), '!empty(v:val)'))
+  " N'écrit que si le contenu change : évite de faire vieillir le mtime et de
+  " déclencher des rebuilds fantômes chez les outils qui lisent ce fichier.
+  if l:new ==# (filereadable(l:path) ? readfile(l:path) : [])
+    return 0
+  endif
+  call writefile(l:new, l:path)
+  " Garde le dépôt propre sans toucher au .gitignore partagé de l'équipe.
+  let l:ex = l:root . '/.git/info/exclude'
+  if filereadable(l:ex) && index(readfile(l:ex), 'verible.filelist') < 0
+    call writefile(['verible.filelist'], l:ex, 'a')
+  endif
+  return 1
+endfunction
+
+command! VeribleFilelist echo s:VeribleSync(expand('%:p'))
+  \ ? 'verible.filelist mis a jour' : 'verible.filelist deja a jour'
+
+augroup VeribleProject
+  autocmd!
+  autocmd BufReadPost,BufWritePost *.sv,*.svh,*.v,*.vh
+    \ call s:VeribleSync(expand('<afile>:p'))
+augroup END
 
 " -----------------------------------------------------------------------------
 " Custom Commands and Functions
@@ -315,6 +478,68 @@ command! HexeditRevert %!xxd -r
 command! TrailingRemove :%s/\s\+$//e
 command! ReloadConfig source $MYVIMRC
 command! EditConfig edit $MYVIMRC
+
+" -----------------------------------------------------------------------------
+" Bascule rapide de thème  (xcode <-> claude sombre <-> claude clair)
+" -----------------------------------------------------------------------------
+" Chaque entrée = colorscheme + background + thème airline assortis.
+let s:themes = [
+      \ {'name': 'claude-light', 'colors': 'claude',      'bg': 'light', 'airline': 'claude'},
+      \ {'name': 'claude-dark',  'colors': 'claude',      'bg': 'dark',  'airline': 'claude'},
+      \ {'name': 'xcode',        'colors': 'xcodedarkhc', 'bg': 'dark',  'airline': 'onedark'},
+      \ ]
+let s:theme_idx = 0
+
+function! s:ThemeNames(...) abort
+  return map(copy(s:themes), 'v:val.name')
+endfunction
+
+function! s:ThemeApply(name, ...) abort
+  let l:i = index(s:ThemeNames(), a:name)
+  if l:i < 0
+    echohl ErrorMsg | echo 'Thème inconnu : ' . a:name | echohl NONE
+    return
+  endif
+  let l:t = s:themes[l:i]
+  let s:theme_idx = l:i
+  execute 'set background=' . l:t.bg
+  execute 'colorscheme ' . l:t.colors
+  if exists(':AirlineTheme') == 2
+    execute 'AirlineTheme ' . l:t.airline
+  else
+    let g:airline_theme = l:t.airline
+  endif
+  if get(g:, 'theme_persist', 0)
+    call writefile([l:t.name], expand('~/.vim/last-theme'))
+  endif
+  " a:1 = silencieux (restauration au démarrage)
+  if !a:0
+    redraw | echo 'Thème : ' . l:t.name . '  (' . l:t.colors . ' / ' . l:t.bg . ')'
+  endif
+endfunction
+
+function! s:ThemeCycle() abort
+  call s:ThemeApply(s:themes[(s:theme_idx + 1) % len(s:themes)].name)
+endfunction
+
+command! -bar ThemeNext call s:ThemeCycle()
+command! -bar -nargs=1 -complete=customlist,s:ThemeNames Theme call s:ThemeApply(<q-args>)
+
+nnoremap <silent> <leader>cc :ThemeNext<CR>
+nnoremap <silent> <leader>c1 :Theme claude-light<CR>
+nnoremap <silent> <leader>c2 :Theme claude-dark<CR>
+nnoremap <silent> <leader>c3 :Theme xcode<CR>
+" Bascule sombre/clair uniquement quand on est déjà sur claude
+nnoremap <silent> <leader>cb :call <SID>ThemeApply(&background ==# 'dark' ? 'claude-light' : 'claude-dark')<CR>
+
+" Décommenter pour retrouver le dernier thème choisi au prochain démarrage :
+" let g:theme_persist = 1
+if get(g:, 'theme_persist', 0) && filereadable(expand('~/.vim/last-theme'))
+  augroup ThemeRestore
+    autocmd!
+    autocmd VimEnter * call s:ThemeApply(readfile(expand('~/.vim/last-theme'))[0], 1)
+  augroup END
+endif
 
 " --- SUPPRIMÉ : Fonctions de formatage maintenant gérées par LSP ---
 
