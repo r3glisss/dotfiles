@@ -10,6 +10,7 @@ export PATH="/opt/homebrew/bin:/usr/local/opt/python/libexec/bin:/Applications/V
 # Add custom binary directories to the PATH if they exist
 [[ -d "$HOME/.bin" ]] && PATH="$HOME/.bin:$PATH"
 [[ -d "$HOME/.local/bin" ]] && PATH="$HOME/.local/bin:$PATH"
+[[ -d "$HOME/.local/bin/env" ]] && PATH="$HOME/.local/bin/env:$PATH"
 [[ -d "$HOME/Applications" ]] && PATH="$HOME/Applications:$PATH"
 
 # Update PATH for the Google Cloud SDK
@@ -362,3 +363,28 @@ PERL5LIB="/Users/reglisse/perl5/lib/perl5${PERL5LIB:+:${PERL5LIB}}"; export PERL
 PERL_LOCAL_LIB_ROOT="/Users/reglisse/perl5${PERL_LOCAL_LIB_ROOT:+:${PERL_LOCAL_LIB_ROOT}}"; export PERL_LOCAL_LIB_ROOT;
 PERL_MB_OPT="--install_base \"/Users/reglisse/perl5\""; export PERL_MB_OPT;
 PERL_MM_OPT="INSTALL_BASE=/Users/reglisse/perl5"; export PERL_MM_OPT;
+
+# Added by LM Studio CLI (lms)
+export PATH="$PATH:/Users/reglisse/.lmstudio/bin"
+# End of LM Studio CLI section
+
+
+# Added by Antigravity
+export PATH="/Users/reglisse/.antigravity/antigravity/bin:$PATH"
+
+# Added Golang
+export PATH="$HOME/go/bin:$PATH"
+
+# bun completions
+[ -s "/Users/reglisse/.bun/_bun" ] && source "/Users/reglisse/.bun/_bun"
+
+# bun
+export BUN_INSTALL="$HOME/.bun"
+export PATH="$BUN_INSTALL/bin:$PATH"
+
+
+# Added by Antigravity CLI installer
+export PATH="/Users/reglisse/.local/bin:$PATH"
+
+# Added by Antigravity IDE
+export PATH="/Users/reglisse/.antigravity-ide/antigravity-ide/bin:$PATH"

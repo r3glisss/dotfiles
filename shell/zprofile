@@ -6,3 +6,12 @@ export JAVA_HOME="/Users/reglisse/Library/Caches/Coursier/arc/https/github.com/a
 # >>> coursier install directory >>>
 export PATH="$PATH:/Users/reglisse/Library/Application Support/Coursier/bin"
 # <<< coursier install directory <<<
+
+# Setting PATH for Python 3.14
+# The original version is saved in .zprofile.pysave
+PATH="/Library/Frameworks/Python.framework/Versions/3.14/bin:${PATH}"
+export PATH
+
+
+# Added by Antigravity CLI installer
+export PATH="/Users/reglisse/.local/bin:$PATH"
