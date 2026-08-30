@@ -1,9 +1,8 @@
 -- Colorschemes.
 --
--- Par defaut : `claude`, le theme maison. Ce n'est pas un plugin -- le fichier
--- vit dans colors/claude.vim a cote de cette configuration -- mais on l'applique
--- depuis une spec chargee en priorite pour qu'aucun plugin de theme ne repasse
--- derriere.
+-- Le theme par defaut est `claude` (colors/claude.vim), applique dans
+-- config/settings.lua : ce n'est pas un plugin, il n'a rien a faire ici.
+-- Ce fichier ne declare que les colorschemes qui viennent d'un plugin.
 --
 -- Un seul fichier gere les deux ambiances, c'est `background` qui choisit :
 --   background=dark   -> expresso
@@ -24,11 +23,10 @@ return {
   {
     "lunacookies/vim-colors-xcode",
     name = "xcode",
+    -- Aucune `config` : la spec ne sert qu'a poser les colorschemes sur le
+    -- runtimepath. Le theme applique au demarrage est choisi dans
+    -- config/settings.lua.
     lazy = false,
     priority = 1000,
-    config = function()
-      vim.o.background = "dark"
-      vim.cmd.colorscheme("claude")
-    end,
   },
 }

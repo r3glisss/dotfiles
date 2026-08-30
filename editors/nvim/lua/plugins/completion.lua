@@ -34,7 +34,9 @@ return {
           map("K", vim.lsp.buf.hover, "Documentation")
           map("<leader>rn", vim.lsp.buf.rename, "Renommer")
           map("<leader>ca", vim.lsp.buf.code_action, "Code action")
-          map("<leader>ds", vim.lsp.buf.document_symbol, "Symboles du fichier")
+          -- Dans le groupe `code` et non `<leader>ds` : `<leader>d` est reserve
+          -- au debug, ou il serait le prefixe des pas-a-pas dap.
+          map("<leader>cs", vim.lsp.buf.document_symbol, "Symboles du fichier")
           map("[d", function()
             vim.diagnostic.jump({ count = -1 })
           end, "Diagnostic precedent")

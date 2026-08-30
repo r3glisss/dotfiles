@@ -59,82 +59,57 @@ return {
     -- Example if you are using cmp how to make sure the correct capabilities for snippets are set
     metals_config.capabilities = require("blink.cmp").get_lsp_capabilities()
 
+    -- Pas d'`on_attach` maison : les mappings LSP communs (gd, gD, gi, gr, K,
+    -- <leader>rn, <leader>ca, <leader>cs, [d, ]d) sont poses une seule fois par
+    -- l'autocmd LspAttach de plugins/completion.lua, pour tous les serveurs.
+    -- On ne garde ici que ce qui est propre a metals et a dap, sur des touches
+    -- qui n'ecrasent rien de global.
+    --
+    -- Ce qui a ete retire, et pourquoi : <leader>f (formatage) ecrasait le
+    -- groupe telescope <leader>f* dans les buffers scala -- <leader>cf de
+    -- conform retombe sur le formatage LSP et fait le meme travail ; <leader>sh
+    -- (signature help) ecrasait le split horizontal ; <leader>d et [c/]c
+    -- (diagnostics) doublonnaient trouble et la convention diff.
     metals_config.on_attach = function(client, bufnr)
       require("metals").setup_dap()
 
-      local map = vim.keymap.set
-      local fn = vim.fn
+      local function map(lhs, rhs, desc)
+        vim.keymap.set("n", lhs, rhs, { buffer = bufnr, desc = desc, silent = true })
+      end
 
-      -- LSP mappings
-      map("n", "gD", vim.lsp.buf.definition)
-      map("n", "K", vim.lsp.buf.hover)
-      map("n", "gi", vim.lsp.buf.implementation)
-      map("n", "gr", vim.lsp.buf.references)
-      map("n", "gds", vim.lsp.buf.document_symbol)
-      map("n", "gws", vim.lsp.buf.workspace_symbol)
-      map("n", "<leader>cl", vim.lsp.codelens.run)
-      map("n", "<leader>sh", vim.lsp.buf.signature_help)
-      map("n", "<leader>rn", vim.lsp.buf.rename)
-      map("n", "<leader>f", vim.lsp.buf.format)
-      map("n", "<leader>ca", vim.lsp.buf.code_action)
-
-      map("n", "<leader>ws", function()
+      -- Propre a metals
+      map("<leader>cc", vim.lsp.codelens.run, "Codelens")
+      map("<leader>ck", vim.lsp.buf.signature_help, "Signature")
+      map("<leader>cw", function()
         require("metals").hover_worksheet()
-      end)
+      end, "Worksheet metals")
 
-      -- all workspace diagnostics
-      map("n", "<leader>aa", vim.diagnostic.setqflist)
-
-      -- all workspace errors
-      map("n", "<leader>ae", function()
-        vim.diagnostic.setqflist({ severity = "E" })
-      end)
-
-      -- all workspace warnings
-      map("n", "<leader>aw", function()
-        vim.diagnostic.setqflist({ severity = "W" })
-      end)
-
-      -- buffer diagnostics only
-      map("n", "<leader>d", vim.diagnostic.setloclist)
-
-      map("n", "[c", function()
-        vim.diagnostic.goto_prev({ wrap = false })
-      end)
-
-      map("n", "]c", function()
-        vim.diagnostic.goto_next({ wrap = false })
-      end)
-
-      -- Example mappings for usage with nvim-dap. If you don't use that, you can
-      -- skip these
-      map("n", "<leader>dc", function()
+      -- Debug. `<leader>do`/`<leader>di` et non `<leader>dso`/`<leader>dsi` :
+      -- ces derniers auraient fait de `<leader>ds` un prefixe.
+      map("<leader>dc", function()
         require("dap").continue()
-      end)
-
-      map("n", "<leader>dr", function()
-        require("dap").repl.toggle()
-      end)
-
-      map("n", "<leader>dK", function()
-        require("dap.ui.widgets").hover()
-      end)
-
-      map("n", "<leader>dt", function()
+      end, "Continuer")
+      map("<leader>db", function()
         require("dap").toggle_breakpoint()
-      end)
-
-      map("n", "<leader>dso", function()
+      end, "Point d'arret")
+      map("<leader>dr", function()
+        require("dap").repl.toggle()
+      end, "REPL")
+      map("<leader>dK", function()
+        require("dap.ui.widgets").hover()
+      end, "Inspecter la valeur")
+      map("<leader>do", function()
         require("dap").step_over()
-      end)
-
-      map("n", "<leader>dsi", function()
+      end, "Pas a pas principal")
+      map("<leader>di", function()
         require("dap").step_into()
-      end)
-
-      map("n", "<leader>dl", function()
+      end, "Pas a pas detaille")
+      map("<leader>du", function()
+        require("dap").step_out()
+      end, "Sortir de la fonction")
+      map("<leader>dl", function()
         require("dap").run_last()
-      end)
+      end, "Relancer la derniere session")
     end
 
     return metals_config
