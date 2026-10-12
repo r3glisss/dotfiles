@@ -313,11 +313,9 @@ return {
     -- pour ne pas entrer en collision avec les actions gitsigns/fugitive.
 
     -- LSP integration
-    keymap.set("n", "<leader>lr", function() builtin.lsp_references() end, { desc = "🔗 LSP references" })
-    keymap.set("n", "<leader>ld", function() builtin.lsp_definitions() end, { desc = "📍 LSP definitions" })
-    keymap.set("n", "<leader>ls", function() builtin.lsp_document_symbols() end, { desc = "🏷️  Document symbols" })
-    keymap.set("n", "<leader>lw", function() builtin.lsp_dynamic_workspace_symbols() end,
-      { desc = "🏷️  Workspace symbols" })
+    -- gd / gr / gi restent les mappings LSP natifs (completion.lua)
+    keymap.set("n", "gO", function() builtin.lsp_document_symbols() end, { desc = "🏷️  Document symbols" })
+    keymap.set("n", "gW", function() builtin.lsp_dynamic_workspace_symbols() end, { desc = "🏷️  Workspace symbols" })
 
     -- Vim integration
     keymap.set("n", "<leader>vh", function() builtin.help_tags() end, { desc = "❓ Help tags" })

@@ -8,10 +8,13 @@
 " Les neutres (fond, texte, commentaires, gouttière) sont alignés sur une même
 " teinte chaude (60°) pour l'ambiance café.
 "
-"   :set background=dark   -> expresso
-"   :set background=light  -> café au lait
+"   :colorscheme claude-dark   -> expresso
+"   :colorscheme claude-white  -> café au lait
 "
-" Options (à mettre dans le .vimrc AVANT :colorscheme claude)
+" Fichier partagé : sourcé par colors/claude-dark.vim et colors/claude-white.vim
+" (qui posent g:claude_variant et 'background'). Ce n'est pas un colorscheme.
+"
+" Options (à mettre dans le .vimrc AVANT :colorscheme claude-*)
 "   let g:claude_bold_keywords   = 0   " mots-clés non gras (défaut : 1)
 "   let g:claude_italic_comments = 0   " commentaires non italiques (défaut : 1)
 "   let g:claude_transparent     = 1   " fond transparent (défaut : 0)
@@ -21,14 +24,15 @@ hi clear
 if exists('syntax_on')
   syntax reset
 endif
-let g:colors_name = 'claude'
+let s:variant = get(g:, 'claude_variant', 'dark')
+let g:colors_name = 'claude-' . s:variant
 
 let s:bold    = get(g:, 'claude_bold_keywords', 1)   ? 'bold'   : 'NONE'
 let s:italic  = get(g:, 'claude_italic_comments', 1) ? 'italic' : 'NONE'
 let s:transp  = get(g:, 'claude_transparent', 0)
 let s:blue_lit = get(g:, 'claude_blue_literals', 1)
 
-if &background ==# 'light'
+if s:variant ==# 'white'
   " --- Café au lait ----------------------------------------------------------
   let s:bg       = ['#F7F2EE', 255]
   let s:bg_alt   = ['#ECE5DF', 254]

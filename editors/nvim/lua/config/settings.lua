@@ -28,12 +28,12 @@ opt.gdefault = true
 opt.cursorline = true
 opt.termguicolors = true
 opt.background = "dark"
--- `claude` vit dans colors/claude.vim, a cote de cette configuration : le
+-- `claude-dark` / `claude-white` vivent dans colors/, a cote de cette configuration : le
 -- dossier de config est sur le runtimepath des le demarrage, donc pas besoin
 -- de passer par une spec de plugin pour l'appliquer. Les colorschemes fournis
 -- par un plugin (xcode*) restent accessibles par :colorscheme une fois lazy
 -- passe.
-vim.cmd.colorscheme("claude")
+vim.cmd.colorscheme("claude-dark")
 -- Gouttiere toujours visible : sans ca le texte saute d'une colonne des qu'un
 -- hunk git ou un diagnostic apparait.
 opt.signcolumn = "yes"

@@ -1,12 +1,11 @@
 -- Colorschemes.
 --
--- Le theme par defaut est `claude` (colors/claude.vim), applique dans
--- config/settings.lua : ce n'est pas un plugin, il n'a rien a faire ici.
--- Ce fichier ne declare que les colorschemes qui viennent d'un plugin.
---
--- Un seul fichier gere les deux ambiances, c'est `background` qui choisit :
---   background=dark   -> expresso
---   background=light  -> cafe au lait
+-- Deux colorschemes, a basculer avec :colorscheme :
+--   claude-dark   -> expresso      (defaut, colors/claude-dark.vim)
+--   claude-white  -> cafe au lait  (colors/claude-white.vim, auto sur markdown)
+-- La palette commune est dans lib/claude_theme.vim ; chaque colorscheme pose
+-- aussi `background`. Ce ne sont pas des plugins, rien a declarer ici : ce
+-- fichier ne declare que les colorschemes qui viennent d'un plugin.
 --
 -- Options, a poser AVANT le :colorscheme
 --   vim.g.claude_bold_keywords   = 0  -- mots-cles non gras

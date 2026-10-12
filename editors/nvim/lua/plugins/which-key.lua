@@ -15,7 +15,6 @@ return {
       { "<leader>g", group = "git" },
       { "<leader>gf", group = "git find" },
       { "<leader>h", group = "harpoon" },
-      { "<leader>l", group = "lsp (telescope)" },
       { "<leader>q", group = "session" },
       { "<leader>r", group = "remplacer / renommer" },
       { "<leader>s", group = "split" },
