@@ -19,7 +19,7 @@ return {
     dependencies = { "nvim-treesitter/nvim-treesitter", "nvim-tree/nvim-web-devicons" },
     ft = { "markdown" },
     -- Colorscheme `claude-white` sur les buffers markdown ; en les quittant, on
-    -- revient au colorscheme precedent (claude-dark par defaut). Le colorscheme
+    -- revient au colorscheme precedent (xcodedark par defaut). Le colorscheme
     -- est global a nvim : toute l'UI bascule avec le buffer courant.
     -- Desactivable avec `vim.g.markdown_light_background = false`.
     -- `init` tourne au demarrage, avant tout chargement lazy du plugin.

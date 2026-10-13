@@ -122,7 +122,14 @@ return {
       },
       file_panel = {
         listing_style = "tree",
-        win_config = { position = "left", width = 32 },
+        win_config = { position = "right", width = 32 },
+      },
+      hooks = {
+        -- scrollbind aligne les numeros de ligne, pas les lignes ecran : avec
+        -- 'wrap' global, une ligne longue d'un seul cote decale les deux volets.
+        diff_buf_win_enter = function(_, winid)
+          vim.wo[winid].wrap = false
+        end,
       },
     },
   },

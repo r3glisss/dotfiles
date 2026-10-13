@@ -28,12 +28,8 @@ opt.gdefault = true
 opt.cursorline = true
 opt.termguicolors = true
 opt.background = "dark"
--- `claude-dark` / `claude-white` vivent dans colors/, a cote de cette configuration : le
--- dossier de config est sur le runtimepath des le demarrage, donc pas besoin
--- de passer par une spec de plugin pour l'appliquer. Les colorschemes fournis
--- par un plugin (xcode*) restent accessibles par :colorscheme une fois lazy
--- passe.
-vim.cmd.colorscheme("claude-dark")
+-- Le colorscheme est applique dans init.lua, apres lazy : xcodedark vient d'un
+-- plugin, absent du runtimepath a ce stade.
 -- Gouttiere toujours visible : sans ca le texte saute d'une colonne des qu'un
 -- hunk git ou un diagnostic apparait.
 opt.signcolumn = "yes"
@@ -162,6 +158,22 @@ map("i", "<A-j>", "<Esc>:m .+1<CR>==gi", "Descendre la ligne")
 map("i", "<A-k>", "<Esc>:m .-2<CR>==gi", "Monter la ligne")
 map("v", "<A-j>", ":m '>+1<CR>gv=gv", "Descendre la selection")
 map("v", "<A-k>", ":m '<-2<CR>gv=gv", "Monter la selection")
+
+-- Molette sur un volet de diff non focalise : nvim ne propage scrollbind que
+-- depuis la fenetre courante, donc le volet survole defilait seul. On lui donne
+-- le focus avant de defiler.
+local function wheel_in_diff(key)
+  local code = vim.api.nvim_replace_termcodes(key, true, false, true)
+  return function()
+    local win = vim.fn.getmousepos().winid
+    if win ~= 0 and win ~= vim.api.nvim_get_current_win() and vim.wo[win].diff and vim.wo[win].scrollbind then
+      vim.api.nvim_set_current_win(win)
+    end
+    vim.cmd.normal({ code, bang = true })
+  end
+end
+map("n", "<ScrollWheelUp>", wheel_in_diff("<ScrollWheelUp>"), "Molette haut")
+map("n", "<ScrollWheelDown>", wheel_in_diff("<ScrollWheelDown>"), "Molette bas")
 
 -----------------------------------------------------------
 -- Autocommandes
