@@ -18,3 +18,4 @@ editors/nvim/lazy-lock.json.bak
 
 # Local overrides (if any)
 *.local
+shell/zsh/profile.zsh

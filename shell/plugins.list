@@ -1,0 +1,7 @@
+# Plugins zsh (pur zsh, aucune compilation) : <nom> <dépôt git>
+# Clonés par install.sh (~/.zsh) ou lite/install.sh (~/.dotfiles-lite/plugins)
+zsh-completions               https://github.com/zsh-users/zsh-completions.git
+zsh-autosuggestions           https://github.com/zsh-users/zsh-autosuggestions.git
+zsh-history-substring-search  https://github.com/zsh-users/zsh-history-substring-search.git
+zsh-z                         https://github.com/agkozak/zsh-z.git
+zsh-syntax-highlighting       https://github.com/zsh-users/zsh-syntax-highlighting.git

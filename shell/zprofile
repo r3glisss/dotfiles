@@ -1,17 +1,2 @@
-
-# >>> JVM installed by coursier >>>
-export JAVA_HOME="/Users/reglisse/Library/Caches/Coursier/arc/https/github.com/adoptium/temurin21-binaries/releases/download/jdk-21.0.6%252B7/OpenJDK21U-jdk_aarch64_mac_hotspot_21.0.6_7.tar.gz/jdk-21.0.6+7/Contents/Home"
-# <<< JVM installed by coursier <<<
-
-# >>> coursier install directory >>>
-export PATH="$PATH:/Users/reglisse/Library/Application Support/Coursier/bin"
-# <<< coursier install directory <<<
-
-# Setting PATH for Python 3.14
-# The original version is saved in .zprofile.pysave
-PATH="/Library/Frameworks/Python.framework/Versions/3.14/bin:${PATH}"
-export PATH
-
-
-# Added by Antigravity CLI installer
-export PATH="/Users/reglisse/.local/bin:$PATH"
+# Spécificités machine (JAVA_HOME, PATH d'installeurs…) : hors dépôt
+[[ -f "${ZDOTDIR:-$HOME}/.zprofile.local" ]] && source "${ZDOTDIR:-$HOME}/.zprofile.local"

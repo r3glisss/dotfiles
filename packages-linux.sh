@@ -71,22 +71,6 @@ install_starship() {
     fi
 }
 
-install_zsh_plugins() {
-    # zsh-autosuggestions
-    local ZSH_AUTOSUGGEST_DIR="${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/plugins/zsh-autosuggestions"
-    if [[ ! -d "$ZSH_AUTOSUGGEST_DIR" ]]; then
-        log_info "Installing zsh-autosuggestions..."
-        git clone https://github.com/zsh-users/zsh-autosuggestions "$ZSH_AUTOSUGGEST_DIR" 2>/dev/null || true
-    fi
-
-    # zsh-syntax-highlighting
-    local ZSH_SYNTAX_DIR="${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting"
-    if [[ ! -d "$ZSH_SYNTAX_DIR" ]]; then
-        log_info "Installing zsh-syntax-highlighting..."
-        git clone https://github.com/zsh-users/zsh-syntax-highlighting "$ZSH_SYNTAX_DIR" 2>/dev/null || true
-    fi
-}
-
 main() {
     if command -v apt &> /dev/null; then
         install_apt
@@ -98,7 +82,6 @@ main() {
     fi
 
     install_starship
-    install_zsh_plugins
 
     log_success "Linux packages installed!"
     log_info "Note: Install Nerd Fonts manually from https://www.nerdfonts.com/font-downloads"

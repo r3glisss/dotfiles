@@ -28,6 +28,7 @@ Options:
     -n, --dry-run   Simulate without making changes
     -f, --force     Overwrite without confirmation
     --no-packages   Skip package installation
+    --lite [...]    Profil zsh lite (serveur client, sans sudo) : lite/install.sh
 
 Examples:
     $(basename "$0")              # Interactive install
@@ -167,6 +168,21 @@ install_tpm() {
     fi
 }
 
+install_zsh_plugins() {
+    local plugin_dir="$HOME/.zsh" name repo
+    while read -r name repo; do
+        [[ -z "$name" || "$name" == \#* ]] && continue
+        if [[ -d "$plugin_dir/$name" ]]; then
+            log_success "zsh plugin already installed: $name"
+        elif $DRY_RUN; then
+            log_info "[DRY-RUN] Would clone $repo to $plugin_dir/$name"
+        else
+            git clone --depth=1 "$repo" "$plugin_dir/$name"
+            log_success "zsh plugin installed: $name"
+        fi
+    done < "$DOTFILES_DIR/shell/plugins.list"
+}
+
 install_vim_plug() {
     local plug_file="$HOME/.vim/autoload/plug.vim"
     if [[ ! -f "$plug_file" ]]; then
@@ -224,6 +240,10 @@ main() {
                 INSTALL_PACKAGES=false
                 shift
                 ;;
+            --lite)
+                shift
+                exec "$DOTFILES_DIR/lite/install.sh" "$@"
+                ;;
             *)
                 log_error "Unknown option: $1"
                 usage
@@ -258,6 +278,7 @@ main() {
     create_symlinks
 
     # Install plugin managers
+    install_zsh_plugins
     install_tpm
     install_vim_plug
 
