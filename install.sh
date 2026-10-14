@@ -212,6 +212,7 @@ create_symlinks() {
 
     # Tools
     create_symlink "$DOTFILES_DIR/tools/tmux.conf" "$HOME/.tmux.conf"
+    create_symlink "$DOTFILES_DIR/tools/tmux" "$HOME/.tmux/dotfiles"
     create_symlink "$DOTFILES_DIR/tools/starship.toml" "$HOME/.config/starship.toml"
     create_symlink "$DOTFILES_DIR/tools/ghostty" "$HOME/.config/ghostty"
 

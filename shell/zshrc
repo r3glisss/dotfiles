@@ -1,7 +1,7 @@
 # --------------------------------------------------------------------------- #
 #                                 ZSHRC LOADER
 # --------------------------------------------------------------------------- #
-# core → [macos] → tools → plugins → prompt → help → [full] → .zshrc.local
+# core → [macos] → tools → editors → plugins → prompt → help → [full] → .zshrc.local
 #   DOTFILES_PROFILE=full (défaut) | lite (déployé par lite/install.sh)
 #   Spécificités machine (PATH d'installeurs…) : ${ZDOTDIR:-$HOME}/.zshrc.local
 
@@ -15,6 +15,7 @@ ZSH_CFG_DIR=${${(%):-%x}:A:h}/zsh
 source "$ZSH_CFG_DIR/core.zsh"
 [[ $OSTYPE == darwin* && -f "$ZSH_CFG_DIR/macos.zsh" ]] && source "$ZSH_CFG_DIR/macos.zsh"
 source "$ZSH_CFG_DIR/tools.zsh"
+source "$ZSH_CFG_DIR/editors.zsh"
 source "$ZSH_CFG_DIR/plugins.zsh"
 source "$ZSH_CFG_DIR/prompt.zsh"
 source "$ZSH_CFG_DIR/help.zsh"

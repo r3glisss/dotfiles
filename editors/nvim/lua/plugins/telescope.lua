@@ -12,7 +12,13 @@ return {
     "ThePrimeagen/git-worktree.nvim",
     "smartpde/telescope-recent-files",
     -- Enhanced dependencies for better functionality
-    { "nvim-telescope/telescope-fzf-native.nvim", build = "make" },
+    -- Compile a l'installation : ignore sans make (serveur client), telescope
+    -- retombe alors sur son tri natif.
+    {
+      "nvim-telescope/telescope-fzf-native.nvim",
+      build = "make",
+      enabled = vim.fn.executable("make") == 1,
+    },
     "nvim-telescope/telescope-file-browser.nvim",
     "nvim-telescope/telescope-ui-select.nvim",
     "nvim-tree/nvim-web-devicons", -- for file icons
@@ -281,7 +287,7 @@ return {
     })
 
     -- Load extensions
-    telescope.load_extension("fzf")
+    pcall(telescope.load_extension, "fzf")
     telescope.load_extension("file_browser")
     telescope.load_extension("ui-select")
     telescope.load_extension("git_worktree")

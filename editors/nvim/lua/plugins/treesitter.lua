@@ -43,6 +43,16 @@ return {
     },
   },
   config = function(_, opts)
+    -- Sans compilateur C (serveur client) aucun parser ne peut etre compile :
+    -- on s'en tient a ceux livres avec nvim (c, lua, markdown, query, vim,
+    -- vimdoc) au lieu d'echouer a chaque ouverture de fichier.
+    local has_cc = vim.iter({ "cc", "gcc", "clang" }):any(function(c)
+      return vim.fn.executable(c) == 1
+    end)
+    if not has_cc then
+      opts.ensure_installed = {}
+      opts.auto_install = false
+    end
     require("nvim-treesitter.configs").setup(opts)
   end,
 }

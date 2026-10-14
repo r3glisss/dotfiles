@@ -3,7 +3,7 @@
 # --------------------------------------------------------------------------- #
 # Usage : dothelp [section]   (sans argument : tout ; "dothelp list" : sections)
 
-_DOTHELP_SECTIONS=(info base ls git search proc func keys plugins macos full)
+_DOTHELP_SECTIONS=(info base ls git search proc func keys edit tmux plugins macos full)
 
 _dothelp_title() {
     local note=""
@@ -35,7 +35,7 @@ dothelp() {
         _dothelp_item "historique" "$HISTFILE"
         _dothelp_item "local" "${ZDOTDIR:-$HOME}/.zshrc.local$([[ -f ${ZDOTDIR:-$HOME}/.zshrc.local ]] || echo ' (absent)')"
         _dothelp_item "prompt" "$([[ $PROMPT == *starship* ]] && echo starship || echo 'natif (vcs_info)')"
-        for t in eza rg fd bat fzf starship; do
+        for t in eza rg fd bat fzf nvim tmux starship; do
             p=${commands[$t]}
             [[ -z $p && $t == bat ]] && p=${commands[batcat]}
             [[ -z $p && $t == fd ]] && p=${commands[fdfind]}
@@ -146,6 +146,52 @@ dothelp() {
         fi
         (( $+functions[_zsh_autosuggest_start] )) && _dothelp_item "→ / Fin" "accepter la suggestion grisée"
         _dothelp_item "Tab" "complétion (menu, insensible à la casse)"
+    fi
+
+    if [[ $s == (all|edit) ]]; then
+        _dothelp_title "Éditeurs"
+        _dothelp_item "EDITOR" "${EDITOR:-(non défini)}"
+        if (( $+commands[nvim] )); then
+            p=${${(f)"$(nvim --version 2>/dev/null)"}[1]#NVIM }
+            _dothelp_item "nvim" "$p, config ${XDG_CONFIG_HOME:-~/.config}/${NVIM_APPNAME:-nvim}"
+            _dothelp_item "  <espace>" "leader : which-key affiche les raccourcis"
+            _dothelp_item "  :Lazy / :Mason" "plugins / serveurs LSP"
+        else
+            _dothelp_off "nvim absent"
+        fi
+        if (( $+aliases[vim] )); then
+            _dothelp_item "vim" "config du dépôt, données $DOTFILES_VIMDIR"
+        elif (( $+commands[vim] )); then
+            _dothelp_item "vim" "config ${MYVIMRC:-~/.vimrc}"
+        else
+            _dothelp_off "vim absent"
+        fi
+        _dothelp_item "fv / Ctrl-E" "choisir un fichier (fzf) puis vim / \$EDITOR"
+    fi
+
+    if [[ $s == (all|tmux) ]]; then
+        if (( $+commands[tmux] )); then
+            local pfx=C-a
+            [[ -n $DOTFILES_TMUX_CONF ]] && pfx=C-b
+            _dothelp_title "Tmux" "préfixe $pfx"
+            if (( $+aliases[tmux] )); then
+                _dothelp_item "tmux" "serveur dédié (-L dotfiles), config $DOTFILES_TMUX_CONF"
+            fi
+            _dothelp_item "$pfx | / $pfx -" "split vertical / horizontal (dossier courant)"
+            _dothelp_item "$pfx h/j/k/l" "aller au panneau"
+            _dothelp_item "$pfx H/J/K/L" "redimensionner"
+            _dothelp_item "$pfx m / x / X" "zoom / fermer panneau / fermer fenêtre"
+            _dothelp_item "$pfx c" "nouvelle fenêtre (dossier courant)"
+            _dothelp_item "$pfx C-h / C-l / Tab" "fenêtre précédente / suivante / dernière"
+            _dothelp_item "$pfx Escape, v, y" "mode copie, sélection, copie (presse-papier)"
+            _dothelp_item "$pfx /" "recherche arrière dans l'historique"
+            _dothelp_item "$pfx s" "synchroniser les panneaux"
+            _dothelp_item "$pfx f / g / t / S" "popups fichiers / lazygit / htop / sessions (tmux >= 3.2)"
+            _dothelp_item "$pfx r" "recharger la config"
+            [[ $pfx == C-b ]] && _dothelp_item "tmux dans tmux" "C-a = tmux du Mac, C-b = tmux du serveur"
+        else
+            _dothelp_off "tmux absent"
+        fi
     fi
 
     if [[ $s == (all|plugins) ]]; then

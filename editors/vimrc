@@ -3,11 +3,35 @@
 " =============================================================================
 
 " -----------------------------------------------------------------------------
+" Répertoires
+" -----------------------------------------------------------------------------
+" Données (plugins, backup, swap, undo) : ~/.vim, ou $DOTFILES_VIMDIR pour
+" rester isolé de la config vim d'un serveur client (profil lite).
+let s:vimdir = empty($DOTFILES_VIMDIR) ? expand('~/.vim') : $DOTFILES_VIMDIR
+if s:vimdir !=# expand('~/.vim')
+  " ~/.vim du client hors du runtimepath : rien de son côté ne se charge
+  set runtimepath-=~/.vim runtimepath-=~/.vim/after
+  execute 'set runtimepath^=' . fnameescape(s:vimdir)
+  execute 'set runtimepath+=' . fnameescape(s:vimdir . '/after')
+  if exists('+viminfofile')
+    let &viminfofile = s:vimdir . '/viminfo'
+  endif
+endif
+" Thème claude, coloration verilog : editors/vim du dépôt, trouvé via le lien
+" ~/.vimrc (ou -u). Ignoré si ~/.vim/colors pointe déjà dessus.
+let s:repo_vim = fnamemodify(resolve(expand('<sfile>:p')), ':h') . '/vim'
+if isdirectory(s:repo_vim)
+  \ && resolve(s:vimdir . '/colors') !=# resolve(s:repo_vim . '/colors')
+  execute 'set runtimepath^=' . fnameescape(s:repo_vim)
+  execute 'set runtimepath+=' . fnameescape(s:repo_vim . '/after')
+endif
+
+" -----------------------------------------------------------------------------
 " Auto-install vim-plug and plugins
 " -----------------------------------------------------------------------------
-if empty(glob('~/.vim/autoload/plug.vim'))
-  silent !curl -fLo ~/.vim/autoload/plug.vim --create-dirs
-    \ https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
+if empty(glob(s:vimdir . '/autoload/plug.vim'))
+  execute 'silent !curl -fLo ' . shellescape(s:vimdir . '/autoload/plug.vim')
+    \ . ' --create-dirs https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim'
 endif
 " Désactivé - pour gérer les plugins manuellement avec :PlugInstall ou :PlugUpdate
 " autocmd VimEnter * if len(filter(values(g:plugs), '!isdirectory(v:val.dir)'))
@@ -17,13 +41,14 @@ endif
 " -----------------------------------------------------------------------------
 " Plugin Management
 " -----------------------------------------------------------------------------
-call plug#begin('~/.vim/plugged')
+call plug#begin(s:vimdir . '/plugged')
 
 " File management and navigation
 Plug 'preservim/nerdtree'
 Plug 'Xuyuanp/nerdtree-git-plugin'
 Plug 'ryanoasis/vim-devicons'
-Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
+" fzf déjà dans le PATH (~/.local/bin en lite) : pas de second binaire
+Plug 'junegunn/fzf', executable('fzf') ? {} : { 'do': { -> fzf#install() } }
 Plug 'junegunn/fzf.vim'
 
 " Editing enhancements
@@ -73,7 +98,7 @@ Plug 'coffee-theme/coffee.vim'
 Plug 'duythinht/vim-coffee', { 'do': 'cp colors/coffee.vim colors/coffee-duythinht.vim' }
 " Cognac range son fichier a la racine -> le placer dans colors/
 Plug 'ckmorris/Cognac-Vim', { 'do': 'mkdir -p colors && cp cognac.vim colors/cognac.vim' }
-" Thème local "claude" : ~/.vim/colors/claude.vim (+ airline : ~/.vim/autoload/airline/themes/claude.vim)
+" Thème local "claude" : editors/vim/colors (+ airline : editors/vim/autoload/airline/themes), ajoutés au runtimepath en tête de fichier
 
 " Syntax highlighting
 Plug 'sheerun/vim-polyglot'
@@ -167,14 +192,14 @@ set expandtab
 set autoread
 set autowrite
 set backup
-set backupdir=~/.vim/backup//
-set directory=~/.vim/swap//
+let &backupdir = s:vimdir . '/backup//'
+let &directory = s:vimdir . '/swap//'
 set undofile
-set undodir=~/.vim/undo//
+let &undodir = s:vimdir . '/undo//'
 
-if !isdirectory($HOME."/.vim/backup") | call mkdir($HOME."/.vim/backup", "p", 0700) | endif
-if !isdirectory($HOME."/.vim/swap") | call mkdir($HOME."/.vim/swap", "p", 0700) | endif
-if !isdirectory($HOME."/.vim/undo") | call mkdir($HOME."/.vim/undo", "p", 0700) | endif
+for s:d in ['backup', 'swap', 'undo']
+  if !isdirectory(s:vimdir . '/' . s:d) | call mkdir(s:vimdir . '/' . s:d, 'p', 0700) | endif
+endfor
 
 " Performance
 set hidden
@@ -510,7 +535,7 @@ function! s:ThemeApply(name, ...) abort
     let g:airline_theme = l:t.airline
   endif
   if get(g:, 'theme_persist', 0)
-    call writefile([l:t.name], expand('~/.vim/last-theme'))
+    call writefile([l:t.name], s:vimdir . '/last-theme')
   endif
   " a:1 = silencieux (restauration au démarrage)
   if !a:0
@@ -534,10 +559,10 @@ nnoremap <silent> <leader>cb :call <SID>ThemeApply(&background ==# 'dark' ? 'cla
 
 " Décommenter pour retrouver le dernier thème choisi au prochain démarrage :
 " let g:theme_persist = 1
-if get(g:, 'theme_persist', 0) && filereadable(expand('~/.vim/last-theme'))
+if get(g:, 'theme_persist', 0) && filereadable(s:vimdir . '/last-theme')
   augroup ThemeRestore
     autocmd!
-    autocmd VimEnter * call s:ThemeApply(readfile(expand('~/.vim/last-theme'))[0], 1)
+    autocmd VimEnter * call s:ThemeApply(readfile(s:vimdir . '/last-theme')[0], 1)
   augroup END
 endif
 

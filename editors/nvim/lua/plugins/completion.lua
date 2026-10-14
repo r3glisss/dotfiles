@@ -113,6 +113,11 @@ return {
     },
     config = function(_, opts)
       require("mason").setup(opts)
+      -- Profil lite (serveur client) : rien d'installe d'office, :Mason a la
+      -- demande (plusieurs paquets exigent npm ou un venv python).
+      if vim.env.DOTFILES_PROFILE == "lite" then
+        return
+      end
       local mr = require("mason-registry")
       for _, tool in ipairs(opts.ensure_installed) do
         local p = mr.get_package(tool)

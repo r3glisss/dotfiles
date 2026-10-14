@@ -12,6 +12,15 @@ if not (vim.uv or vim.loop).fs_stat(lazypath) then
     vim.fn.getchar()
     os.exit(1)
   end
+  -- Meme commit que lazy-lock.json : lazy.nvim ne se restaure pas lui-meme, et
+  -- sans ca le premier lancement reecrit le lockfile (depot sale chez un client).
+  local ok, lock = pcall(function()
+    return vim.json.decode(table.concat(vim.fn.readfile(vim.fn.stdpath("config") .. "/lazy-lock.json"), "\n"))
+  end)
+  local commit = ok and lock["lazy.nvim"] and lock["lazy.nvim"].commit
+  if commit then
+    vim.fn.system({ "git", "-C", lazypath, "checkout", "--quiet", commit })
+  end
 end
 vim.opt.rtp:prepend(lazypath)
 

@@ -5,7 +5,7 @@ Configuration personnelle pour macOS et Linux, avec deux profils zsh :
 | Profil | Usage | Installation |
 |--------|-------|--------------|
 | **full** | Machine perso / admin (macOS, Linux) | `./install.sh` : paquets (brew/apt/dnf), liens symboliques, plugins |
-| **lite** | Serveur client en SSH, **sans sudo** | `./install.sh --lite` : tout dans `~/.dotfiles-lite` et `~/.local/bin` |
+| **lite** | Serveur client en SSH, **sans sudo** | `./install.sh --lite` : zsh, vim, nvim et tmux isolés dans `~/.dotfiles-lite`, binaires dans `~/.local/bin` |
 
 Les deux profils partagent le même code zsh : chaque fonctionnalité qui dépend d'un outil externe ne s'active que si cet outil est présent.
 
@@ -23,7 +23,7 @@ cd ~/dotfiles
 
 ### Profil lite (serveur client)
 
-Prérequis côté serveur : `zsh`, `git`, `curl`, `tar`, accès internet (GitHub). Aucun droit admin.
+Prérequis côté serveur : `zsh`, `git`, `curl`, `tar`, `find`, accès internet (GitHub). Aucun droit admin. `vim` ≥ 8.1 est optionnel ; nvim est fourni.
 
 ```bash
 git clone https://github.com/r3glisss/dotfiles.git ~/dotfiles
@@ -55,7 +55,7 @@ Une fois le shell chargé : **`dothelp`** affiche tous les alias, fonctions et r
 
 ```bash
 lite/install.sh               # Installation / mise à jour
-lite/install.sh --no-bins     # Sans eza/rg/fd/bat/fzf
+lite/install.sh --no-bins     # Sans eza/rg/fd/bat/fzf/nvim
 lite/install.sh --uninstall   # Désinstallation
 lite/install.sh --help
 ```
@@ -67,7 +67,7 @@ lite/fetch-bins.sh <x86_64|aarch64> <dossier> [outil...]
 lite/fetch-bins.sh x86_64 ~/.local/bin rg fzf     # seulement rg et fzf
 ```
 
-Télécharge les binaires Linux depuis les releases GitHub. Un fichier `.<outil>.version` est écrit dans le dossier ; un outil déjà à la bonne version n'est pas retéléchargé.
+Télécharge les binaires Linux depuis les releases GitHub. Un fichier `.<outil>.version` est écrit dans le dossier ; un outil déjà à la bonne version n'est pas retéléchargé. nvim (runtime + parsers, pas un binaire seul) est extrait dans `<dossier>/../opt/nvim-<version>`, `<dossier>/nvim` en est un lien.
 
 ---
 
@@ -80,13 +80,17 @@ Télécharge les binaires Linux depuis les releases GitHub. Un fichier `.<outil>
 | `shell/plugins.list` | Plugins zsh : `<nom> <dépôt git>` |
 | `shell/zprofile` | Shell de login : charge `~/.zprofile.local` |
 | `lite/install.sh` | Installation du profil lite |
-| `lite/fetch-bins.sh` | Téléchargement des binaires eza/rg/fd/bat/fzf |
+| `lite/fetch-bins.sh` | Téléchargement de eza/rg/fd/bat/fzf/nvim |
 | `install.sh` | Installation du profil full |
 | `packages-linux.sh` | Paquets Linux (apt / dnf) |
 | `Brewfile` | Paquets macOS |
 | `editors/vimrc` | Vim (vim-plug) |
 | `editors/nvim/` | Neovim (lazy.nvim) |
-| `tools/tmux.conf` | Tmux (TPM) |
+| `tools/tmux.conf` | Tmux profil full : préfixe `Ctrl-a`, TPM, CPU / batterie |
+| `tools/tmux/common.conf` | Tmux : base commune (options, raccourcis, thème) |
+| `tools/tmux/v32.conf` | Tmux ≥ 3.2 : `terminal-features`, popups (avec repli si l'outil manque) |
+| `tools/tmux/macos.conf` | Tmux macOS : Ghostty, `pbcopy`, logo Apple |
+| `tools/tmux/remote.conf` | Tmux serveur (lite) : préfixe `Ctrl-b`, machine dans la barre |
 | `tools/starship.toml` | Prompt starship (profil full) |
 | `tools/ghostty/` | Terminal Ghostty |
 | `git/gitconfig`, `git/ignore` | Git |
@@ -102,7 +106,8 @@ shell/zshrc
  ├─ zsh/profile.zsh   (si présent : généré par lite/install.sh, non versionné)
  ├─ zsh/core.zsh      zsh pur : PATH utilisateur, historique, options de complétion, alias, fonctions
  ├─ zsh/macos.zsh     macOS uniquement : Homebrew, TERM, ps BSD, pmset
- ├─ zsh/tools.zsh     eza / rg / fd / bat / fzf, chacun activé seulement s'il est présent
+ ├─ zsh/tools.zsh     eza / rg / fd / bat / fzf (si présents) ; alias tmux en lite
+ ├─ zsh/editors.zsh   EDITOR (nvim > vim > vi) ; en lite, alias vim -u <dépôt>/editors/vimrc
  ├─ zsh/plugins.zsh   fpath + compinit + plugins (jamais de clone au démarrage)
  ├─ zsh/prompt.zsh    starship (profil full, si installé) sinon prompt natif
  ├─ zsh/help.zsh      commande dothelp
@@ -119,6 +124,10 @@ Le loader retrouve son propre dossier en résolvant le lien symbolique, il fonct
 | `DOTFILES_PROFILE` | `full` | `full` ou `lite` (fixé par `zsh/profile.zsh` en lite) |
 | `ZSH_PLUGIN_DIR` | `~/.zsh` | Dossier des plugins (`~/.dotfiles-lite/plugins` en lite) |
 | `ZSH_CFG_DIR` | calculé | Dossier `shell/zsh` du dépôt |
+| `NVIM_APPNAME` | non défini | `nvim-dotfiles` en lite : config `~/.config/nvim-dotfiles`, données `~/.local/share/nvim-dotfiles` |
+| `DOTFILES_VIMDIR` | non défini (`~/.vim`) | Données vim (plugins, undo, swap, viminfo) ; `~/.dotfiles-lite/vim` en lite |
+| `DOTFILES_TMUX_CONF` | non défini | `~/.dotfiles-lite/tmux.conf` en lite : active l'alias `tmux -L dotfiles -f …` |
+| `EDITOR` / `VISUAL` | nvim, sinon vim, sinon vi | Seulement si la machine n'en définit pas déjà |
 | `HISTFILE` | `${ZDOTDIR:-$HOME}/.zsh_history` | Historique (50 000 en mémoire, 10 000 sur disque, partagé entre sessions) |
 
 ### Fichiers locaux (hors dépôt)
@@ -136,7 +145,7 @@ En lite, l'équivalent est `~/.dotfiles-lite/.zshrc.local`. Le dépôt ne contie
 
 ```bash
 dothelp             # tout
-dothelp <section>   # info base ls git search proc func keys plugins macos full
+dothelp <section>   # info base ls git search proc func keys edit tmux plugins macos full
 dothelp list        # liste des sections
 ```
 
@@ -270,15 +279,21 @@ Ils sont clonés par `install.sh` (`~/.zsh`) ou `lite/install.sh` (`~/.dotfiles-
 
 - **Aucun sudo, aucun paquet système.** Le dépôt est cloné en HTTPS (public, pas de clé nécessaire).
 - **Le `.zshrc` du client n'est pas modifié** : le profil passe par `ZDOTDIR=~/.dotfiles-lite`. Les `~/.zprofile`, `~/.zlogin` et `~/.zlogout` du client restent chargés.
+- **Les configs vim/nvim du client ne sont ni lues ni modifiées** : nvim via `NVIM_APPNAME=nvim-dotfiles`, vim via `vim -u <dépôt>/editors/vimrc` avec ses données dans `~/.dotfiles-lite/vim` (le `~/.vim` du client est retiré du runtimepath).
+- **tmux du serveur, config du dépôt** : `tmux -L dotfiles -f ~/.dotfiles-lite/tmux.conf`, un serveur tmux à part ; le `~/.tmux.conf` et les sessions du client ne sont pas touchés, aucun plugin TPM.
+- **Versions figées** : binaires et vim-plug à une version précise ; les plugins (zsh, vim, nvim) viennent de git, ceux de nvim aux commits de `lazy-lock.json`.
 - **Chaque étape est validée** : `o` exécuter, `n` passer, `q` quitter.
 
 ### Étapes de `lite/install.sh`
 
-0. **Détection** : OS, architecture, shell de login, présence de zsh/git/curl/tar (arrêt si l'un manque). Les outils déjà fournis par le système sont conservés ; seuls les absents sont proposés.
+0. **Détection** : OS, architecture, shell de login, présence de zsh/git/curl/tar/find (arrêt si l'un manque). Les outils déjà fournis par le système sont conservés ; seuls les absents sont proposés, plus nvim si celui du système est < 0.11 ; nvim n'est pas proposé si la glibc est trop ancienne (voir ci-dessous). Signale aussi vim (≥ 8.1 avec `+eval` requis), `cc` et `make`.
 1. **Plugins zsh** : `git clone --depth=1` dans `~/.dotfiles-lite/plugins`, ou `git pull` s'ils existent déjà.
 2. **Configuration** : `~/.dotfiles-lite/.zshrc` → lien vers `~/dotfiles/shell/zshrc`, shims `.zprofile/.zlogin/.zlogout`, génération de `shell/zsh/profile.zsh` (`DOTFILES_PROFILE=lite`).
 3. **Binaires** : téléchargement dans `~/.local/bin` des outils absents (liste conservée dans `~/.dotfiles-lite/bins.installed`).
-4. **Activation au login** : ajout d'un bloc balisé, le fichier d'origine est sauvegardé une seule fois en `*.bak-dotfiles-lite` :
+4. **Neovim** : lien `~/.config/nvim-dotfiles` → `~/dotfiles/editors/nvim`, puis `nvim --headless "+Lazy! restore"` : plugins aux commits de `lazy-lock.json` (log : `~/.dotfiles-lite/nvim-install.log`). Mason n'installe rien d'office en lite (`:Mason` à la demande).
+5. **Vim** (si vim ≥ 8.1) : vim-plug 0.14.0 dans `~/.dotfiles-lite/vim/autoload`, puis `:PlugInstall` (log : `~/.dotfiles-lite/vim-install.log`).
+6. **Tmux** (si tmux ≥ 3.0) : génère `~/.dotfiles-lite/tmux.conf` (voir [Tmux en lite](#tmux-en-lite)).
+7. **Activation au login** : ajout d'un bloc balisé, le fichier d'origine est sauvegardé une seule fois en `*.bak-dotfiles-lite` :
    - shell de login **zsh** → `~/.zshenv` :
      ```zsh
      # >>> dotfiles-lite >>>
@@ -295,7 +310,7 @@ Ils sont clonés par `install.sh` (`~/.zsh`) ou `lite/install.sh` (`~/.dotfiles-
      # <<< dotfiles-lite <<<
      ```
    Si cette étape est passée : lancer à la main avec `ZDOTDIR=~/.dotfiles-lite zsh`.
-5. **Test** : lance un zsh interactif avec le profil et affiche le profil, l'alias `ls` et l'emplacement des outils.
+8. **Test** : lance un zsh interactif avec le profil et affiche le profil, `EDITOR`, les alias `ls`/`vim`/`tmux`, l'emplacement des outils, le préfixe et le `TERM` de tmux (serveur de test lancé puis arrêté) et le colorscheme chargé par nvim.
 
 ### Arborescence côté serveur
 
@@ -308,9 +323,17 @@ Ils sont clonés par `install.sh` (`~/.zsh`) ou `lite/install.sh` (`~/.dotfiles-
   .zsh_history .zcompdump
   .zshrc.local                    réglages propres à ce client (optionnel)
   plugins/                        plugins zsh (clones git)
+  tmux.conf                       généré : sources tools/tmux/*.conf (chemins absolus)
+  vim/                            DOTFILES_VIMDIR : autoload/plug.vim, plugged/, undo/, swap/, backup/, viminfo
   bins.installed                  binaires installés par le script
+  nvim-install.log vim-install.log
   disabled                        (optionnel) désactive le profil
 ~/.local/bin/                     eza rg fd bat fzf + .<outil>.version
+  nvim -> ~/.local/opt/nvim-<version>/bin/nvim
+~/.local/opt/nvim-<version>/      archive nvim (runtime, parsers c/lua/markdown/query/vim/vimdoc)
+~/.config/nvim-dotfiles -> ~/dotfiles/editors/nvim
+~/.local/share/nvim-dotfiles/     plugins lazy, mason
+~/.local/state/nvim-dotfiles/     undo, swap, backup, log
 ```
 
 ### Binaires optionnels
@@ -324,14 +347,52 @@ Versions figées dans `lite/fetch-bins.sh` pour qu'une installation soit reprodu
 | bat | 0.26.1 | musl statique | musl statique |
 | eza | 0.23.5 | musl statique | **glibc** (pas de build musl publié) |
 | fzf | 0.74.5 | Go statique | Go statique |
+| nvim | 0.11.6 | glibc ≥ 2.17 (`neovim/neovim-releases`) | glibc ≥ 2.34 (`neovim/neovim`) |
 
-Les binaires statiques n'ont aucune dépendance et fonctionnent sur toute distribution Linux. Pour changer de version : modifier la variable en tête de `fetch-bins.sh`, puis relancer l'installation.
+Les binaires statiques n'ont aucune dépendance et fonctionnent sur toute distribution Linux. nvim reste en 0.11 : la config suit l'API 0.11 (nvim-treesitter branche `master`), c'est aussi la version du Mac.
+
+**Changer de version** : modifier la variable `*_VERSION` en tête de `fetch-bins.sh`, commiter, puis `git pull && lite/install.sh` côté serveur.
+
+### Vim et Neovim en lite
+
+| | Neovim | Vim |
+|--|--------|-----|
+| Config | `editors/nvim` via `~/.config/nvim-dotfiles` | `editors/vimrc` via l'alias `vim -u …` |
+| Données | `~/.local/{share,state}/nvim-dotfiles` | `~/.dotfiles-lite/vim` |
+| Plugins | lazy.nvim, commits de `lazy-lock.json` | vim-plug, branches par défaut |
+| Config client | `~/.config/nvim` ignoré | `~/.vimrc`, `~/.vim`, `~/.viminfo` ignorés |
+
+Adaptations automatiques sur un serveur sans outils de compilation :
+- **sans `cc`** : pas de compilation de parsers treesitter ; c, lua, markdown, query, vim et vimdoc restent coloriés par treesitter (parsers livrés avec nvim), les autres langages par la coloration vim classique ;
+- **sans `make`** : `telescope-fzf-native` désactivé, telescope utilise son tri natif ;
+- **profil lite** : mason n'installe rien au démarrage (`:Mason` pour un serveur LSP ponctuel ; plusieurs exigent npm ou python).
+
+`EDITOR` vaut `nvim` (git, `fzf_edit`). Ne pas lancer `:Lazy update` chez un client : cela réécrit `editors/nvim/lazy-lock.json` dans le dépôt et bloque le prochain `git pull` (l'installeur le signale ; `git checkout editors/nvim/lazy-lock.json` pour revenir).
+
+### Tmux en lite
+
+tmux est souvent déjà installé sur les serveurs : l'installeur ne télécharge rien, il génère `~/.dotfiles-lite/tmux.conf` d'après le tmux trouvé.
+
+| Élément | Comportement |
+|---------|--------------|
+| Version | ≥ 3.0 requis (étape passée sinon) ; popups `prefix + f/g/t/S` seulement si ≥ 3.2 |
+| Serveur | `alias tmux='tmux -L dotfiles -f …'` : sessions séparées de celles du client (`/usr/bin/tmux ls` ne les voit pas) |
+| Préfixe | `Ctrl-b` : `Ctrl-a` reste au tmux du Mac, un tmux distant dans le tmux local se pilote sans double préfixe |
+| `TERM` | `tmux-256color` si la terminfo existe sur le serveur, sinon `screen-256color` (pas de `xterm-ghostty`) |
+| Shell des panneaux | zsh (profil lite), même si le shell de login est bash |
+| Copie | `y` en mode copie → OSC 52 : arrive dans le presse-papier du Mac à travers SSH (Ghostty l'accepte) |
+| Barre | machine (orange) + session à gauche, heure / date à droite ; pas de CPU / batterie |
+| Popups | `f` fichiers (fd/fzf/bat, sinon find/head), `g` lazygit, `t` htop sinon top, `S` sessions (fzf, sinon `choose-tree`) |
+| Plugins | aucun (pas de TPM, rien dans `~/.tmux`) |
+
+Les fichiers `tools/tmux/*.conf` sont lus directement dans le dépôt : `git pull` puis `prefix + r` suffit. Relancer l'installeur seulement si la version de tmux du serveur change. `--uninstall` ne ferme pas les sessions en cours (`tmux kill-server` dans le shell lite pour cela).
 
 ### Opérations courantes
 
 | Besoin | Commande |
 |--------|----------|
 | Mettre à jour (config, plugins, binaires) | `cd ~/dotfiles && git pull && lite/install.sh` |
+| Lancer nvim / vim avec la config | `nvim` / `vim` (dans le shell lite) |
 | Désactiver temporairement | `touch ~/.dotfiles-lite/disabled` (réactiver : `rm` du fichier) |
 | Réglage propre à un client | éditer `~/.dotfiles-lite/.zshrc.local` |
 | Vérifier l'état | `dothelp info` |
@@ -343,8 +404,9 @@ La relance de `lite/install.sh` est idempotente : le bloc de login n'est jamais 
 
 `--uninstall` (chaque étape est validée) :
 1. retire les blocs de `~/.zshenv` et `~/.bashrc` ;
-2. supprime les binaires listés dans `bins.installed` ;
-3. supprime `~/.dotfiles-lite` (**historique et `.zshrc.local` compris**) et `profile.zsh`.
+2. supprime les binaires listés dans `bins.installed` (et `~/.local/opt/nvim-<version>`) ;
+3. supprime `~/.config/nvim-dotfiles` et `~/.local/{share,state}/nvim-dotfiles`, `~/.cache/nvim-dotfiles` ;
+4. supprime `~/.dotfiles-lite` (**historique, `.zshrc.local` et plugins vim compris**) et `profile.zsh`.
 
 Restent à supprimer à la main si besoin : `~/dotfiles` et les sauvegardes `*.bak-dotfiles-lite`.
 
@@ -358,6 +420,7 @@ Restent à supprimer à la main si besoin : `~/dotfiles` et les sauvegardes `*.b
 ~/.vimrc                -> ~/dotfiles/editors/vimrc
 ~/.config/nvim          -> ~/dotfiles/editors/nvim
 ~/.tmux.conf            -> ~/dotfiles/tools/tmux.conf
+~/.tmux/dotfiles        -> ~/dotfiles/tools/tmux
 ~/.config/starship.toml -> ~/dotfiles/tools/starship.toml
 ~/.config/ghostty       -> ~/dotfiles/tools/ghostty
 ~/.gitconfig            -> ~/dotfiles/git/gitconfig
@@ -368,16 +431,16 @@ Restent à supprimer à la main si besoin : `~/dotfiles` et les sauvegardes `*.b
 
 1. Redémarrer le terminal ou `source ~/.zshrc`
 2. Tmux : `prefix + I` pour installer les plugins
-3. Vim : `:PlugInstall`
-4. Neovim : lazy.nvim s'installe au premier lancement
+3. Vim : `:PlugInstall` (le vimrc ajoute lui-même `editors/vim` au runtimepath : thème claude, syntaxe verilog)
+4. Neovim : lazy.nvim s'installe au premier lancement, au commit de `lazy-lock.json`
 
 ## Raccourcis tmux & éditeurs
 
-### Tmux (préfixe : `Ctrl-a`)
+### Tmux (préfixe : `Ctrl-a` en full, `Ctrl-b` en lite)
 
 | Touche | Action |
 |--------|--------|
-| `prefix + I` | installer les plugins (TPM) |
+| `prefix + I` | installer les plugins (TPM, full seulement) |
 | `prefix + r` | recharger la config |
 | `prefix + \|` / `prefix + -` | split vertical / horizontal |
 | `prefix + h/j/k/l` | naviguer entre panneaux |
@@ -386,13 +449,16 @@ Restent à supprimer à la main si besoin : `~/dotfiles` et les sauvegardes `*.b
 | `prefix + x` / `X` | fermer panneau / fenêtre |
 | `prefix + c` | nouvelle fenêtre (dossier courant) |
 | `prefix + Ctrl-h/l`, `Tab` | fenêtre précédente / suivante / dernière |
-| `prefix + Escape` | mode copie (`v` sélection, `y` copie) |
+| `prefix + Escape` | mode copie (`v` sélection, `Ctrl-v` rectangle, `y` copie : `pbcopy` sur macOS, OSC 52 ailleurs) |
+| `prefix + /` | recherche arrière dans l'historique |
 | `prefix + s` | synchroniser les panneaux |
-| `prefix + f` / `g` / `t` | popup fzf / lazygit / htop |
+| `prefix + f` / `g` / `t` / `S` | popups fichiers / lazygit / htop / sessions (tmux ≥ 3.2) |
+
+`dothelp tmux` affiche ces raccourcis avec le préfixe actif.
 
 ### Vim / Neovim
 
-Voir `editors/vimrc` et `editors/nvim/`.
+Voir `editors/vimrc` et `editors/nvim/`. Leader : `Espace` ; dans nvim, which-key affiche les raccourcis après `Espace`. `dothelp edit` résume l'éditeur actif et sa config.
 
 ## Prérequis
 
@@ -400,7 +466,7 @@ Voir `editors/vimrc` et `editors/nvim/`.
 |--|------|------|
 | OS | macOS, Linux (apt/dnf) | Linux x86_64 / aarch64 |
 | Droits | sudo (paquets) | aucun |
-| Outils | git, zsh, curl (Homebrew auto-installé sur macOS) | zsh, git, curl, tar |
+| Outils | git, zsh, curl (Homebrew auto-installé sur macOS) | zsh, git, curl, tar, find ; optionnels : vim ≥ 8.1, cc, make |
 
 ## Mise à jour (profil full)
 
@@ -412,6 +478,10 @@ git pull
 
 ## Limites connues
 
-- `tools/tmux.conf` utilise `default-terminal "xterm-ghostty"`, une terminfo absente de la plupart des serveurs : il n'y a pas encore de tmux lite.
-- Les binaires téléchargés par `fetch-bins.sh` ne sont pas vérifiés par checksum.
-- `eza` aarch64 dépend de la glibc du serveur.
+- tmux < 3.0 (RHEL/Rocky 8 : 2.7) : pas de config tmux lite, le tmux du serveur reste tel quel.
+- Les binaires téléchargés ne sont pas vérifiés par checksum (seul HTTPS protège le transfert).
+- Les plugins vim ne sont pas figés à un commit (vim-plug suit les branches) ; ceux de nvim le sont.
+- Sur le profil full, `vim-plug` est téléchargé depuis `master` s'il est absent.
+- `eza` aarch64 dépend de la glibc du serveur (testé dès 2.28). `nvim` aarch64 exige glibc ≥ 2.34 : pas de nvim sur Ubuntu 20.04 / RHEL 8 arm64 (aucun build compatible publié), vim reste disponible.
+- vim < 8.1 (RHEL/Rocky 8 : 8.0) : pas de config vim lite.
+- eza 0.23.5 interprète `--icons <chemin>` comme une valeur : les alias utilisent `--icons=auto`.

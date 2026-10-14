@@ -14,7 +14,7 @@ else
     _preview_file="head -500 {}"
 fi
 if (( $+commands[eza] )); then
-    _preview_dir="eza --tree --color=always --icons {} | head -200"
+    _preview_dir="eza --tree --color=always --icons=auto {} | head -200"
 else
     _preview_dir="ls -la {}"
 fi
@@ -23,17 +23,17 @@ fi
 #                                    EZA
 # --------------------------------------------------------------------------- #
 if (( $+commands[eza] )); then
-    alias ls='eza --color=always --group-directories-first --icons'
-    alias ll='eza -l --color=always --group-directories-first --icons --git'
-    alias la='eza -la --color=always --group-directories-first --icons --git'
-    alias lt='eza -aT --color=always --group-directories-first --icons'
+    alias ls='eza --color=always --group-directories-first --icons=auto'
+    alias ll='eza -l --color=always --group-directories-first --icons=auto --git'
+    alias la='eza -la --color=always --group-directories-first --icons=auto --git'
+    alias lt='eza -aT --color=always --group-directories-first --icons=auto'
     alias l.='eza -a | grep "^\."'
-    alias tree='eza --tree --level=3 --icons'
-    alias ltree='eza --tree --long --level=2 --icons --git'
-    alias lsf='eza -1 --icons'
-    alias lsd='eza -D --icons'
-    alias lss='eza -alh --sort=size --icons'
-    alias lst='eza -alt --sort=modified --icons'
+    alias tree='eza --tree --level=3 --icons=auto'
+    alias ltree='eza --tree --long --level=2 --icons=auto --git'
+    alias lsf='eza -1 --icons=auto'
+    alias lsd='eza -D --icons=auto'
+    alias lss='eza -alh --sort=size --icons=auto'
+    alias lst='eza -alt --sort=modified --icons=auto'
 fi
 
 # --------------------------------------------------------------------------- #
@@ -44,6 +44,15 @@ if (( $+commands[rg] )); then
     alias rgf='rg --files | rg'
     alias rgl='rg --files-with-matches'
     alias rgc='rg --count'
+fi
+
+# --------------------------------------------------------------------------- #
+#                                    TMUX
+# --------------------------------------------------------------------------- #
+# Lite : config du dépôt (générée par lite/install.sh) sur un serveur tmux
+# dédié (-L dotfiles), séparé des sessions et du ~/.tmux.conf du client.
+if [[ -n $DOTFILES_TMUX_CONF && -f $DOTFILES_TMUX_CONF ]] && (( $+commands[tmux] )); then
+    alias tmux="tmux -L dotfiles -f ${(q)DOTFILES_TMUX_CONF}"
 fi
 
 # --------------------------------------------------------------------------- #
@@ -106,7 +115,7 @@ alias fv="vim \$(fzf --preview '$_preview_file')"
 # Fuzzy find and edit
 fzf_edit() {
     local file
-    file=$(fzf --query="$1" --preview "$_preview_file") && ${EDITOR:-vim} "$file"
+    file=$(fzf --query="$1" --preview "$_preview_file") && ${=EDITOR:-vim} "$file"
 }
 
 # Fuzzy find and cd with preview
